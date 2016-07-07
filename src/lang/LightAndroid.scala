@@ -1,5 +1,11 @@
 package lang
 
+/*
+ * Wei Chen, University of Edinburgh
+ * 25/06/2016 - 07/07/2016 
+ *
+*/
+
 import scala.io.Source
 import scala.util.matching.Regex
 import scala.collection.mutable.Map
@@ -144,15 +150,23 @@ class LightAndroid (work_dir:String) {
 
     def orglabel (cls:Class, name:Name, typ:MtdType, slabel:SwitchLabel) : OrgLabel =
       tb(cls, name, typ, slabel)._1
-
-    def register (cls:Class, name:Name, typ:MtdType, slabel:SwitchLabel) : Register =
+    def register (cls:Class, name:Name, typ:MtdType, slabel:SwitchLabel) : Register = 
       tb(cls, name, typ, slabel)._2
-
     def insert(cls:Class, name:Name, typ:MtdType, slabel:SwitchLabel, olabel:OrgLabel, reg:Register) {
       val key = (cls, name, typ, slabel)
       tb += (key -> (olabel, reg))
     }
   }  
+
+  private object array {
+    val tb = Map[(Class, Name, MtdType, Label), Register]()
+    def register (cls:Class, name:Name, typ:MtdType, label:Label) : Register =
+      tb(cls, name, typ, label)
+    def insert (cls:Class, name:Name, typ:MtdType, label:Label, reg:Register) {
+      val key = (cls, name, typ, label)
+      tb += (key -> reg)
+    }
+  }
 
   type Pattern = Regex
   type Operation = Regex
@@ -163,14 +177,14 @@ class LightAndroid (work_dir:String) {
   
   private object dex {  
     var dex_file = ""  
-    def extra_data (offset:Offset) : List[Int] = {
+    def extra_data (offset:Offset) : List[Long] = {
       val PACKED_SWITCH_PAYLOAD = 256 // 0x0100 
       val SPARSE_SWITCH_PAYLOAD = 512 // 0x0200 
       val FILL_ARRAY_DATA_PAYLOAD = 768 // 0x0300 
       val file = new RandomAccessFile(dex_file, "r")
       // little-endian is used in Dalvik code
-      def read_nbyte (n_bytes:Int): Int = { 
-        var l = List[Int]()
+      def read_nbyte (n_bytes:Int): Long = { 
+        var l = List[Long]()
         for (i <- 1 to n_bytes)
           l ::= file.read()
         return l.reduceLeft((x,y) => x * 256 + y) 
@@ -178,23 +192,23 @@ class LightAndroid (work_dir:String) {
       def read_short = read_nbyte(2)
       def read_int = read_nbyte(4)
       file.seek(offset.toInt)
-      var l = List[Int]()
+      var l = List[Long]()
       val ident = read_short
       if (ident == PACKED_SWITCH_PAYLOAD) {
-        val size = read_short
+        val size = read_short.toInt
         read_int//first_key
         for (i <- 1 to size) 
           l ::= read_int //targets
       } else if (ident == SPARSE_SWITCH_PAYLOAD) {
-        val size = read_short
+        val size = read_short.toInt
         for (i <- 1 to size) 
           read_int//keys
         for (i <- 1 to size) 
           l ::= read_int //targets
       }
       else if (ident == FILL_ARRAY_DATA_PAYLOAD) {
-        val elem_width = read_short
-        val size = read_int
+        val elem_width = read_short.toInt
+        val size = read_int.toInt
         for (i <- 1 to size)
           l ::= read_nbyte(elem_width)
       }
@@ -511,7 +525,7 @@ class LightAndroid (work_dir:String) {
               case "INSTANCEOF" => val op(t,s,c) = ops; ins = Some(new Ins(opExp(op), List(t), s, c))
               case "ARRAYLEN" => val op(t,s) = ops; ins = Some(new Ins(opExp(op), List(t), s))
               case "NEWI" => val op(t,c) = ops; ins = Some(new Ins(opExp(op), List(t), c))
-              case "NEWA" => val op(t,n,c) = ops; ins = Some(new Ins(opExp(op), List(t), c, n))
+              case "NEWA" => val op(t,n,c) = ops; ins = Some(new Ins(opExp(op), List(t), n))
               case "FILLEDNEWA" => 
                 val args = ARGS.findFirstIn(ops) match {
                   // e.g., {v1, v2, v3}
@@ -522,7 +536,7 @@ class LightAndroid (work_dir:String) {
                   case Some(ARYT(name)) => List(name)
                   case None => List()
                 }
-                ins = Some(new Ins(opExp(op), List(def_reg), arty ++ args))
+                ins = Some(new Ins(opExp(op), List(def_reg), args.length.toString :: args))
               case "FILLARRAY" => val op(t,l) = ops; ins = Some(new Ins(opExp(op), List(t), Integer.parseInt(l,16).toString))
               case "THROW" => ins = Some(new Ins(opExp(op), List()))
               case "GOTO" => val op(l) = ops; ins = Some(new Ins(opExp(op), List(Integer.parseInt(l,16).toString)))
@@ -676,11 +690,21 @@ class LightAndroid (work_dir:String) {
                   val original_label = switch.orglabel(cls, mtd, typ, switch_label) 
                   var target_labels = List[String]() 
                   for (t <- extra_data(offset))
-                    target_labels ::= (t + original_label.toInt).toString
+                    target_labels ::= (t + original_label.toLong).toString
                   ins = new Ins("jmp", target_labels, List(register))
-                  println(ins)
                 } else if (operator == "fillarray") { // fill-array-data
+                  val array_data_label = sources.head 
+                  val register = targets.head
+                  array.insert(cls, mtd, typ, array_data_label, register)
+                  ins = new Ins("jmp", List(array_data_label))
                 } else if (operator == "ad") {
+                  val array_data_label = label 
+                  val register = array.register(cls, mtd, typ, array_data_label)
+                  var array_data = List[String]() 
+                  for (t <- extra_data(offset))
+                    array_data ::= t.toString
+                  array_data = array_data.reverse
+                  ins = new Ins("new", List(register), array_data.length.toString :: array_data)
                 }
                 method.insert(cls, mtd, typ, label, ins)
               case "CATCH_RANGE" => 
@@ -719,5 +743,4 @@ class LightAndroid (work_dir:String) {
   for (line <- Seq(dump_cmd, "-d", dex.dex_file).lines) {
     dex.decode_line(line)
   }
-  except.print
 }
