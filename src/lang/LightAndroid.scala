@@ -202,7 +202,7 @@ class LightAndroid (work_dir:String) {
       } else if (ident == SPARSE_SWITCH_PAYLOAD) {
         val size = read_short.toInt
         for (i <- 1 to size) 
-          read_int//keys
+          read_int //keys
         for (i <- 1 to size) 
           l ::= read_int //targets
       }
