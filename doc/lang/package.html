@@ -1,0 +1,141 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>lang - lang</title>
+          <meta name="description" content="lang - lang" />
+          <meta name="keywords" content="lang lang" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../lib/template.js"></script>
+      <script type="text/javascript" src="../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../index.html';
+            var hash = 'lang.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../lib/package_big.png" />
+        
+        <h1>lang</h1><span class="permalink">
+      <a href="../index.html#lang.package" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lang</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="lang.LightAndroid" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="LightAndroidextendsAnyRef"></a>
+      <a id="LightAndroid:LightAndroid"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="LightAndroid.html"><span class="name">LightAndroid</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#lang.package@LightAndroidextendsAnyRef" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Convert Android apps in Dalvik code into programs in the abstract analysis language: light Android.</p><div class="fullcomment"><div class="comment cmt"><p>Convert Android apps in Dalvik code into programs in the abstract analysis language: light Android.</p><p>This translation simplifies code by reducing more than 200 Dalvik opcodes into 7 abstract instructions.</p><p>It preserves semantics for further behavioural analysis of Android apps.</p><p>The map from Dalvik opcodes to abstract instructions in light Android is given as follows.</p><pre>+--------------------------------------------------+-------------------------------------------------------------------+
+|  move t s                  -&gt; mov t s            |  nop, monitor s,                                                  |
+|  const t a                 -&gt; mov t a            |  move-exception t,                                                |
+|  iget t s f, aget t s f    -&gt; mov t s.f          |  check-cast s C, <span class="kw">throw</span> e        -&gt; op                             |
++--------------------------------------------------+-------------------------------------------------------------------+
+|  iput s t f, aput s t f    -&gt; mov t.f s          |  neg t s, not t s, *-to-* t s,                                    |
+|  sget t C f                -&gt; mov t C.f          |  array-length t s               -&gt; op t s                         |
++--------------------------------------------------+-------------------------------------------------------------------+
+|  sput s C f                -&gt; mov C.f s          |  cmp, add, sub, rsub, mul,                                        |
+|  <span class="kw">new</span>-instance t C          -&gt; <span class="kw">new</span> t C            |  div, rem, and, or, xor, shl,                                     |
+|  <span class="kw">new</span>-array t n C           -&gt; <span class="kw">new</span> t n            |  shr, ushr, instance-of t s C   -&gt; op t s s', op t s a, op t s C  |
++--------------------------------------------------+-------------------------------------------------------------------+
+|  filled-<span class="kw">new</span>-array args C   -&gt; <span class="kw">new</span> t #args args   |  goto l                         -&gt; jmp l                          |
++--------------------------------------------------+-------------------------------------------------------------------+
+|  fill-array t l               jmp l              |  <span class="kw">if</span>-* s l                       -&gt; jmp l s                        |
+|  l: array-data n as        -&gt; <span class="kw">new</span> t n as         |  <span class="kw">if</span>-* s s' l                    -&gt; jmp l s s'                     |
++--------------------------------------------------+-------------------------------------------------------------------+
+|  l: invoke args C m T      -&gt; inv r C.m:T args   |  *-switch s l                      jmp l                          |
+|  l+<span class="num">1</span>: move-result t        -&gt; mov t r            |  l: *-switch-data keys ls       -&gt; jmp ls s                       |
++--------------------------------------------------+-------------------------------------------------------------------+
+|  <span class="kw">return</span>-void               -&gt; ret                |  <span class="kw">return</span> s                       -&gt; ret s                          |
++--------------------------------------------------+-------------------------------------------------------------------+</pre></div><dl class="attributes block"> <div class="block">Example:
+               <ol><li class="cmt"><p></p><pre><span class="kw">val</span> la = <span class="kw">new</span> LightAndroid(<span class="lit">"./exp/classes.dex"</span>, <span class="lit">"./exp/dex_dump.txt"</span>)</pre><p>creates an instance of LightAndroid from &quot;classes.dex&quot; and &quot;dex_dump.txt&quot; which is output of the command &quot;dexdump -d classes.dex&quot;.</p></li></ol>
+            </div></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
