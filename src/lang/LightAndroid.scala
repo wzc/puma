@@ -1,36 +1,112 @@
 package lang
 
-/*
- * Wei Chen, University of Edinburgh
- * 25/06/2016 - 07/07/2016 
- *
-*/
-
+// read lines from a file
 import scala.io.Source
-import scala.util.matching.Regex
+
+// data structures
 import scala.collection.mutable.Map
+
+// match regular expressions
+import scala.util.matching.Regex
+
+// seek a position in a file
 import java.io.RandomAccessFile
 
-class LightAndroid (work_dir:String) {
+// execute system commands
+import scala.sys.process._ 
+ 
+/**
+ * Convert Android apps in Dalvik code into programs in the abstract analysis language: light Android.
+ * 
+ * This translation simplifies code by reducing more than 200 Dalvik opcodes into 7 abstract instructions.
+ *
+ * It preserves semantics for further behavioural analysis of Android apps.  
+ *
+ * The map from Dalvik opcodes to abstract instructions in light Android is given as follows.
+ *
+ *
+ * {{{ 
+ * +--------------------------------------------------+-------------------------------------------------------------------+
+ * |  move t s                  -> mov t s            |  nop, monitor s,                                                  | 
+ * |  const t a                 -> mov t a            |  move-exception t,                                                |
+ * |  iget t s f, aget t s f    -> mov t s.f          |  check-cast s C, throw e        -> op                             | 
+ * +--------------------------------------------------+-------------------------------------------------------------------+
+ * |  iput s t f, aput s t f    -> mov t.f s          |  neg t s, not t s, *-to-* t s,                                    |
+ * |  sget t C f                -> mov t C.f          |  array-length t s               -> op t s                         | 
+ * +--------------------------------------------------+-------------------------------------------------------------------+
+ * |  sput s C f                -> mov C.f s          |  cmp, add, sub, rsub, mul,                                        | 
+ * |  new-instance t C          -> new t C            |  div, rem, and, or, xor, shl,                                     |
+ * |  new-array t n C           -> new t n            |  shr, ushr, instance-of t s C   -> op t s s', op t s a, op t s C  |
+ * +--------------------------------------------------+-------------------------------------------------------------------+
+ * |  filled-new-array args C   -> new t #args args   |  goto l                         -> jmp l                          |
+ * +--------------------------------------------------+-------------------------------------------------------------------+
+ * |  fill-array t l               jmp l              |  if-* s l                       -> jmp l s                        | 
+ * |  l: array-data n as        -> new t n as         |  if-* s s' l                    -> jmp l s s'                     |
+ * +--------------------------------------------------+-------------------------------------------------------------------+
+ * |  l: invoke args C m T      -> inv r C.m:T args   |  *-switch s l                      jmp l                          |
+ * |  l+1: move-result t        -> mov t r            |  l: *-switch-data keys ls       -> jmp ls s                       |
+ * +--------------------------------------------------+-------------------------------------------------------------------+
+ * |  return-void               -> ret                |  return s                       -> ret s                          |
+ * +--------------------------------------------------+-------------------------------------------------------------------+
+ * }}}
+ *
+ *
+ * @example
+ * {{{
+ * val la = new LightAndroid("./exp/classes.dex", "./exp/dex_dump.txt")
+ * }}}
+ * creates an instance of LightAndroid from "classes.dex" and "dex_dump.txt" which is output of the command "dexdump -d classes.dex".
+ *
+ * @author Wei Chen @ University of Edinburgh, 25/06/2016 - 27/07/2016 
+ * 
+ */
+class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
 
+  /**
+   * Class names.
+   */
   type Class = String
-  private object superclass {
+  /**
+   * The map from a class to its superclass.
+   */
+  object superclass {
     private val tb = Map[Class, Class]()
     def insert(cls:Class, sup:Class) {tb(cls) = sup}
     def print = tb.keys.foreach(x => println(x.toString + " -> " + tb(x).toString))
+    /**
+     * Get a class's superclass.
+     * @note The input is assumed to be a valid class name. Otherwise, an exception is thrown.
+     */
+    def get(cls:Class): Class = tb(cls)
   }
   
+  /**
+   * Interface names (abstract classes). 
+   */
   type Interface = Class
-  private object interface {
+  /**
+   * The map from a class to a list of interfaces it implements.
+   */
+  object interface {
     private val tb = Map[Class, List[Interface]]()
-    def insert(cls:Class, intf:Interface) =
+    def insert(cls:Class, intf:Interface) : Unit =
       (tb get cls) match {
         case Some(_) => tb(cls) ::= intf 
         case None => tb += (cls -> List(intf))
       }
     def print = tb.keys.foreach(x => println(x.toString + " -> " + tb(x).toString))
+    /**
+     * Get the list of interfaces a class implements.
+     * @note Return an empty list if this class doesn't implement any interface. 
+     */
+    def get(cls:Class): List[Interface] = 
+      if (tb contains cls) tb(cls)
+      else List()
   }
 
+  /**
+   * 
+   */
   type Field = String
   private object field { 
     private val tb = Map[Class, List[Field]]()
@@ -176,7 +252,7 @@ class LightAndroid (work_dir:String) {
   type Offset = String 
   
   private object dex {  
-    var dex_file = ""  
+    var dex_file = classes_dex_file 
     def extra_data (offset:Offset) : List[Long] = {
       val PACKED_SWITCH_PAYLOAD = 256 // 0x0100 
       val SPARSE_SWITCH_PAYLOAD = 512 // 0x0200 
@@ -723,24 +799,14 @@ class LightAndroid (work_dir:String) {
     }
   }
 
-  /*
-   * Wei: The input should be an .apk file. For the testing purpose,
-   *      I temporarily use the result of "dexdump -d classes.dex" as 
-   *      input.
-   */
-
+  // deal with unicode
   import java.nio.charset.CodingErrorAction
   import scala.io.Codec
   implicit val codec = Codec("UTF-8")
   codec.onMalformedInput(CodingErrorAction.REPLACE)
   codec.onUnmappableCharacter(CodingErrorAction.REPLACE)
-  
-  import scala.sys.process._
-  
-  val dump_cmd = work_dir + "/dexdump"
-  dex.dex_file = work_dir + "/temp/classes.dex"
-  
-  for (line <- Seq(dump_cmd, "-d", dex.dex_file).lines) {
+ 
+  for (line <- Source.fromFile(dex_dump_file).getLines()) {
     dex.decode_line(line)
   }
 }
