@@ -22,7 +22,7 @@ import scala.sys.process._
  *
  * It preserves semantics for further behavioural analysis of Android apps.  
  *
- * The map from Dalvik opcodes to abstract instructions in light Android is given as follows.
+ * The map from Dalvik opcodes to abstract instructions in light Android is as follows.
  *
  *
  * {{{ 
@@ -55,7 +55,21 @@ import scala.sys.process._
  * {{{
  * val la = new LightAndroid("./exp/classes.dex", "./exp/dex_dump.txt")
  * }}}
- * creates an instance of LightAndroid from "classes.dex" and "dex_dump.txt" which is output of the command "dexdump -d classes.dex".
+ * creates an instance of LightAndroid from the .dex file "classes.dex" and "dex_dump.txt" which is output of the command "dexdump -d classes.dex".
+ * {{{
+ * la.superclass.get("Lcom/app/demo/MainActivity;")
+ * la.interface.get("Lcom/app/demo/MainActivity;")
+ * la.static_field.get("Lcom/app/demo/MainActivity;")
+ * la.instance_field.get("Lcom/app/demo/MainActivity;")
+ * }}}
+ * get the superclass, interfaces and fields of the class "Lcom/app/demo/MainActivity;".
+ *
+ * {{{
+ * la.method.get("Lcom/app/demo/MainActivity;", "gcd", "(II)V")
+ * la.method.args("Lcom/app/demo/MainActivity;", "gcd", "(II)V")
+ * la.method.body("Lcom/app/demo/MainActivity;", "gcd", "(II)V")
+ * }}}
+ * get the definition (arguments, body), formal arguments and body of the method "gcd".
  *
  * @author Wei Chen @ University of Edinburgh, 25/06/2016 - 27/07/2016 
  * 
@@ -75,13 +89,13 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
     def print = tb.keys.foreach(x => println(x.toString + " -> " + tb(x).toString))
     /**
      * Get a class's superclass.
-     * @note The input is assumed to be a valid class name. Otherwise, an exception is thrown.
+     * @note The input is assumed to be a valid class name, otherwise, an exception will be thrown.
      */
     def get(cls:Class): Class = tb(cls)
   }
   
   /**
-   * Interface names (abstract classes). 
+   * Interface names (abstract classes).
    */
   type Interface = Class
   /**
@@ -105,10 +119,13 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
   }
 
   /**
-   * 
+   * Field names.  
    */
   type Field = String
-  private object field { 
+  /**
+   * The map from a class to its list of static fields.
+   */
+  object static_field { 
     private val tb = Map[Class, List[Field]]()
     def insert(cls:Class, fld:Field) =
       (tb get cls) match {
@@ -116,12 +133,45 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
         case None => tb += (cls -> List(fld))
       }
     def print = tb.keys.foreach(x => println(x.toString + " -> " + tb(x).toString))
+    /**
+     * Get a class's static field list. 
+     * @note Return an empty list if this class doesn't have any static field. 
+     */
+    def get(cls:Class): List[Field] = 
+      if (tb contains cls) tb(cls)
+      else List()
   }
   
+  /**
+   * The map from a class to its list of instance fields.
+   */
+  object instance_field { 
+    private val tb = Map[Class, List[Field]]()
+    def insert(cls:Class, fld:Field) =
+      (tb get cls) match {
+        case Some(_) => tb(cls) ::= fld
+        case None => tb += (cls -> List(fld))
+      }
+    def print = tb.keys.foreach(x => println(x.toString + " -> " + tb(x).toString))
+    /**
+     * Get a class's instance field list. 
+     * @note Return an empty list if this class doesn't have any instance field. 
+     */
+    def get(cls:Class): List[Field] = 
+      if (tb contains cls) tb(cls)
+      else List()
+  }
+
+  /**
+   * Instruction. Format: operator, a list of targets, and a list of sources.
+   */
   class Ins (var operator:String, var targets:List[String], var sources:List[String]) {
     def op = operator
     def ta: List[String] = targets 
     def src: List[String] = sources
+    /**
+     * @param sources varied length arguments.
+     */
     def this(operator:String, targets:List[String], sources:String*) = {
       this(operator, targets, sources.toList)
     }
@@ -129,14 +179,36 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
     override def toString = operator + " " + targets.toString + " " + sources.toString
   }
 
+  /**
+   * Method names.
+   */
   type Name = String
+  /**
+   * Formal arguments of methods. 
+   */
   type Arguments = List[String]
+  /**
+   * Instruction labels.
+   */
   type Label = String 
+  /**
+   * Method bodies. 
+   */
   type Body = List[(Label, Ins)]
+  /**
+   * Method definitions. 
+   */
   type Method = (Arguments, Body)
+  /**
+   * Method types. 
+   */
   type MtdType = String
 
-  private object method { 
+  /**
+   * The method definition table. 
+   * @note A method is uniquely identified by its class, name and type. 
+   */
+  object method { 
     private val tb = Map[(Class, Name, MtdType), Method]()
     
     def args(cls:Class, name:Name, typ:MtdType) : Option[Arguments] =
@@ -150,11 +222,17 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
         case Some(elem) => Some(elem._2)
         case None => None
       }
-    
-    def insert (cls:Class, name:Name, args:Arguments, typ:MtdType) = 
+   
+    /**
+     *  Add a new method.
+     */ 
+    def insert (cls:Class, name:Name, args:Arguments, typ:MtdType) : Unit = 
       tb += ((cls,name,typ) -> (args, List()))
-      
-    def insert (cls:Class, name:Name, typ:MtdType, label:Label, ins:Ins) = {
+     
+    /**
+     * Insert an instruction into the body of a method.
+     */ 
+    def insert (cls:Class, name:Name, typ:MtdType, label:Label, ins:Ins) : Unit = {
       val body = this.body(cls,name,typ) match {
         case Some(elem) => elem
         case None => Nil
@@ -166,15 +244,40 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
       tb += ((cls,name,typ) -> (args, (label, ins) :: body))
     }
 
+    /**
+     * Retrieve the definition of a method.
+     */
+    def get (cls:Class, name:Name, typ:MtdType): Option[Method] = {
+      (tb get (cls,name,typ)) match {
+        case Some(elem) => Some(elem)
+        case None => None 
+      }
+    }
     def print = tb.keys.foreach(x => println(x.toString + " -> " + tb(x).toString))
   }
-
+  
+  /**
+   * Label ranges for exceptions. 
+   */
   type Range = (Label, Label)
+  /**
+   * Except names. 
+   */
   type Except = String
+  /**
+   * Target (instruction) labels to catch exceptions.
+   */
   type Target = Label
+  /**
+   * A map from exceptions to target (instruction) labels. 
+   */
   type Catch = (Except, Target)
 
-  private object except {
+  /**
+   * The try-and-catch table.
+   * @note Each row is uniquely identified by the quadrupe: classes, methods, method types and (instruction) label ranges.
+   */
+  object except {
     private val tb = Map[(Class, Name, MtdType), Map[Range, List[Catch]]]()
     def catch_list (cls:Class, name:Name, typ:MtdType, range:Range) : Option[List[Catch]] = {
       val key = (cls, name, typ)
@@ -187,14 +290,20 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
         case None => None 
       }
     }
-    def insert (cls:Class, name:Name, typ:MtdType, range:Range) = {
+    /**
+     * Add a new label range.
+     */
+    def insert (cls:Class, name:Name, typ:MtdType, range:Range) : Unit = {
       val key = (cls, name, typ)
       if (tb.contains(key))
         tb(key) += (range -> List[Catch]())
       else
         tb += (key -> Map(range -> List[Catch]()))
     }
-    def insert (cls:Class, name:Name, typ:MtdType, range:Range, except:Except, target:Label) = {
+    /**
+     * Insert an exception-to-target map.
+     */
+    def insert (cls:Class, name:Name, typ:MtdType, range:Range, except:Except, target:Label) : Unit = {
       val key = (cls, name, typ)
       val cl = this.catch_list(cls, name, typ, range) match {
         case Some(cl) => cl
@@ -217,24 +326,38 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
     } 
   }
 
+  /**
+   * Target (instruction) labels for switches.
+   */
   type SwitchLabel = Label
+  /**
+   * The labels of switch instructions.
+   */
   type OrgLabel = Label
   type Register = String
 
-  private object switch {
+  /**
+   * The switch table recording the instruction label and its dependant register.
+   * @note Each row is uniquely identified by the quadrupes: classes, methods, method types and (switch instruction) labels.
+   */
+  object switch {
     val tb = Map[(Class, Name, MtdType, SwitchLabel), (OrgLabel, Register)]()
 
     def orglabel (cls:Class, name:Name, typ:MtdType, slabel:SwitchLabel) : OrgLabel =
       tb(cls, name, typ, slabel)._1
     def register (cls:Class, name:Name, typ:MtdType, slabel:SwitchLabel) : Register = 
       tb(cls, name, typ, slabel)._2
-    def insert(cls:Class, name:Name, typ:MtdType, slabel:SwitchLabel, olabel:OrgLabel, reg:Register) {
+    def insert(cls:Class, name:Name, typ:MtdType, slabel:SwitchLabel, olabel:OrgLabel, reg:Register) : Unit = {
       val key = (cls, name, typ, slabel)
       tb += (key -> (olabel, reg))
     }
   }  
 
-  private object array {
+  /**
+   * The array-data table recording the target register.
+   * @note Each row is uniquely identified by the quadrupes: classes, methods, method types and (switch instruction) labels.
+   */
+  object array {
     val tb = Map[(Class, Name, MtdType, Label), Register]()
     def register (cls:Class, name:Name, typ:MtdType, label:Label) : Register =
       tb(cls, name, typ, label)
@@ -244,15 +367,32 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
     }
   }
 
+  /**
+   * Regular expressions for pattern matching, e.g., classes, methods, fields, etc.
+   */
   type Pattern = Regex
+  /**
+   * Regular expressions for instructions, e.g., mov, new, invoke, etc.
+   */
   type Operation = Regex
   type Tag = String
+  /**
+   * Instructions of the light Android.
+   */
   type Exp = String
   type Type = Name
   type Offset = String 
   
-  private object dex {  
-    var dex_file = classes_dex_file 
+  /**
+   * Convert the output of "dexdump -d classes.dex"  to programs in light Android.
+   */
+  object dex {  
+    private var dex_file = classes_dex_file 
+    /**
+     * Read switch tables and array data.
+     * @note Return a list of 4-bytes integers. 
+     * Ref: https://source.android.com/devices/tech/dalvik/dalvik-bytecode.html
+     */
     def extra_data (offset:Offset) : List[Long] = {
       val PACKED_SWITCH_PAYLOAD = 256 // 0x0100 
       val SPARSE_SWITCH_PAYLOAD = 512 // 0x0200 
@@ -295,7 +435,6 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
     /*
      * Wei: U+10000...U+10ffff are ignored because it seems that this programming language doesn't support them.
      *      Other unicodes are from "https://source.android.com/devices/tech/dalvik/dex-format.html".
-     * 
      */
     
     private val NAME:Pattern = "[a-zA-Z0-9\u00a1-\u1fff\u2010-\u2027\u2030-\ud7ff\ue000-\uffef$-_<>/\\[;]+".r
@@ -303,7 +442,8 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
     private val CLASS:Pattern = ("[ ]+Class descriptor[ ]+:[ ]+'(" + NAME.toString + ")'").r
     private val SUPPERCLASS:Pattern = ("[ ]+Superclass[ ]+:[ ]+'(" + NAME.toString + ")'").r
     private val INTERFACE:Pattern = ("[ ]+#[0-9]+[ ]+:[ ]+'(" + NAME.toString + ")'").r
-    private val FIELD:Pattern = "[ ]+Static fields[ ]+(-)".r
+    private val STATIC_FIELD:Pattern = "[ ]+Static fields[ ]+(-)".r
+    private val INSTANCE_FIELD:Pattern = "[ ]+Instance fields[ ]+(-)".r
     private val METHOD:Pattern = "[ ]+Direct methods[ ]+(-)".r
     private val ITEM:Pattern = ("[ ]+name+[ ]+:[ ]+'(" + NAME.toString + ")'").r
     private val REGISTER:Pattern = ("[ ]+registers+[ ]+:[ ]+(" + NAME.toString + ")").r
@@ -332,7 +472,8 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
     patTag += (CLASS -> "CLASS")
     patTag += (SUPPERCLASS -> "SUPERCLASS")
     patTag += (INTERFACE -> "INTERFACE")
-    patTag += (FIELD -> "FIELD")
+    patTag += (STATIC_FIELD -> "STATIC_FIELD")
+    patTag += (INSTANCE_FIELD -> "INSTANCE_FIELD")
     patTag += (METHOD -> "METHOD")
     patTag += (ITEM -> "ITEM")
     patTag += (REGISTER -> "REGISTER")
@@ -578,7 +719,14 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
     opExp += (SSWITCHDATA -> "ssd")
     opExp += (ARRAYDATA -> "ad")
 
+    /**
+     * Opcode names
+     */
     type Op = String
+    /**
+     * Decode Dalvik opcodes and translate them into instructions in light Android.
+     * @note Ref: https://source.android.com/devices/tech/dalvik/dalvik-bytecode.html
+     */
     def decode_op (ops: Op) : Option[Ins] = {
       var ins:Option[Ins] = None 
       val def_reg = "v"
@@ -689,7 +837,8 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
     }
     
     private var cls:Class = ""
-    private var in_field_list:Boolean = false
+    private var in_static_field_list:Boolean = false
+    private var in_instance_field_list:Boolean = false
     private var mtd:Name = ""
     private var typ:Type = ""
     private var num_regs = 0
@@ -701,6 +850,10 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
     private var start_label:Label = "" 
     private var end_label:Label = "" 
     
+
+    /**
+     * Decode Dalvik code (output of "dexdump -d classes.dex") by lines. 
+     */
     def decode_line (line:String) : Unit = {
       var found_pattern:Boolean = false
       for (pat <- patTag.keys) {
@@ -712,11 +865,14 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
               case "CLASS" => cls = name
               case "SUPERCLASS" => superclass.insert(cls, name)
               case "INTERFACE" => interface.insert(cls, name)
-              case "FIELD" => in_field_list = true
-              case "METHOD" => in_field_list = false
+              case "STATIC_FIELD" => in_static_field_list = true
+              case "INSTANCE_FIELD" => in_static_field_list = false; in_instance_field_list = true
+              case "METHOD" => in_instance_field_list = false
               case "ITEM" =>
-                if (in_field_list) //a new field name
-                  field.insert(cls, name)
+                if (in_static_field_list) //a new static field name
+                  static_field.insert(cls, name)
+                else if (in_instance_field_list) //a new instance field name
+                  instance_field.insert(cls, name)
                 else // a new method name
                   mtd = name; typ = ""; num_regs = 0; num_args = 0
               case "METHOD_TYPE" =>

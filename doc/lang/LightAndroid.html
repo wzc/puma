@@ -49,7 +49,7 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Convert Android apps in Dalvik code into programs in the abstract analysis language: light Android.</p><p>This translation simplifies code by reducing more than 200 Dalvik opcodes into 7 abstract instructions.</p><p>It preserves semantics for further behavioural analysis of Android apps.</p><p>The map from Dalvik opcodes to abstract instructions in light Android is given as follows.</p><pre>+--------------------------------------------------+-------------------------------------------------------------------+
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Convert Android apps in Dalvik code into programs in the abstract analysis language: light Android.</p><p>This translation simplifies code by reducing more than 200 Dalvik opcodes into 7 abstract instructions.</p><p>It preserves semantics for further behavioural analysis of Android apps.</p><p>The map from Dalvik opcodes to abstract instructions in light Android is as follows.</p><pre>+--------------------------------------------------+-------------------------------------------------------------------+
 |  move t s                  -&gt; mov t s            |  nop, monitor s,                                                  |
 |  const t a                 -&gt; mov t a            |  move-exception t,                                                |
 |  iget t s f, aget t s f    -&gt; mov t s.f          |  check-cast s C, <span class="kw">throw</span> e        -&gt; op                             |
@@ -71,7 +71,12 @@
 +--------------------------------------------------+-------------------------------------------------------------------+
 |  <span class="kw">return</span>-void               -&gt; ret                |  <span class="kw">return</span> s                       -&gt; ret s                          |
 +--------------------------------------------------+-------------------------------------------------------------------+</pre></div><dl class="attributes block"> <div class="block">Example:
-               <ol><li class="cmt"><p></p><pre><span class="kw">val</span> la = <span class="kw">new</span> LightAndroid(<span class="lit">"./exp/classes.dex"</span>, <span class="lit">"./exp/dex_dump.txt"</span>)</pre><p>creates an instance of LightAndroid from &quot;classes.dex&quot; and &quot;dex_dump.txt&quot; which is output of the command &quot;dexdump -d classes.dex&quot;.</p></li></ol>
+               <ol><li class="cmt"><p></p><pre><span class="kw">val</span> la = <span class="kw">new</span> LightAndroid(<span class="lit">"./exp/classes.dex"</span>, <span class="lit">"./exp/dex_dump.txt"</span>)</pre><p>creates an instance of LightAndroid from the .dex file &quot;classes.dex&quot; and &quot;dex_dump.txt&quot; which is output of the command &quot;dexdump -d classes.dex&quot;.</p><pre>la.superclass.get(<span class="lit">"Lcom/app/demo/MainActivity;"</span>)
+la.interface.get(<span class="lit">"Lcom/app/demo/MainActivity;"</span>)
+la.static_field.get(<span class="lit">"Lcom/app/demo/MainActivity;"</span>)
+la.instance_field.get(<span class="lit">"Lcom/app/demo/MainActivity;"</span>)</pre><p>get the superclass, interfaces and fields of the class &quot;Lcom/app/demo/MainActivity;&quot;.</p><pre>la.method.get(<span class="lit">"Lcom/app/demo/MainActivity;"</span>, <span class="lit">"gcd"</span>, <span class="lit">"(II)V"</span>)
+la.method.args(<span class="lit">"Lcom/app/demo/MainActivity;"</span>, <span class="lit">"gcd"</span>, <span class="lit">"(II)V"</span>)
+la.method.body(<span class="lit">"Lcom/app/demo/MainActivity;"</span>, <span class="lit">"gcd"</span>, <span class="lit">"(II)V"</span>)</pre><p>get the definition (arguments, body), formal arguments and body of the method &quot;gcd&quot;.</p></li></ol>
             </div></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
@@ -149,7 +154,7 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Formal arguments of methods.</p>
     </li><li name="lang.LightAndroid.Body" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Body=List[(LightAndroid.this.Label,LightAndroid.this.Ins)]"></a>
       <a id="Body:Body"></a>
@@ -166,7 +171,7 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Method bodies.</p>
     </li><li name="lang.LightAndroid.Catch" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Catch=(LightAndroid.this.Except,LightAndroid.this.Target)"></a>
       <a id="Catch:Catch"></a>
@@ -183,7 +188,7 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">A map from exceptions to target (instruction) labels.</p>
     </li><li name="lang.LightAndroid.Class" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Class=String"></a>
       <a id="Class:Class"></a>
@@ -217,7 +222,7 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Except names.</p>
     </li><li name="lang.LightAndroid.Exp" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Exp=String"></a>
       <a id="Exp:Exp"></a>
@@ -234,7 +239,7 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Instructions of the light Android.</p>
     </li><li name="lang.LightAndroid.Field" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Field=String"></a>
       <a id="Field:Field"></a>
@@ -251,8 +256,8 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt"></p>
-    </li><li name="lang.LightAndroid.Ins" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">Field names.</p>
+    </li><li name="lang.LightAndroid.Ins" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="InsextendsAnyRef"></a>
       <a id="Ins:Ins"></a>
       <h4 class="signature">
@@ -268,7 +273,8 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Instruction.</p><div class="fullcomment"><div class="comment cmt"><p>Instruction. Format: operator, a list of targets, and a list of sources.
+</p></div></div>
     </li><li name="lang.LightAndroid.Interface" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Interface=LightAndroid.this.Class"></a>
       <a id="Interface:Interface"></a>
@@ -302,7 +308,7 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Instruction labels.</p>
     </li><li name="lang.LightAndroid.Method" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Method=(LightAndroid.this.Arguments,LightAndroid.this.Body)"></a>
       <a id="Method:Method"></a>
@@ -319,7 +325,7 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Method definitions.</p>
     </li><li name="lang.LightAndroid.MtdType" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="MtdType=String"></a>
       <a id="MtdType:MtdType"></a>
@@ -336,7 +342,7 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Method types.</p>
     </li><li name="lang.LightAndroid.Name" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Name=String"></a>
       <a id="Name:Name"></a>
@@ -353,7 +359,7 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Method names.</p>
     </li><li name="lang.LightAndroid.Offset" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Offset=String"></a>
       <a id="Offset:Offset"></a>
@@ -387,7 +393,7 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Regular expressions for instructions, e.g., mov, new, invoke, etc.</p>
     </li><li name="lang.LightAndroid.OrgLabel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="OrgLabel=LightAndroid.this.Label"></a>
       <a id="OrgLabel:OrgLabel"></a>
@@ -404,7 +410,7 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">The labels of switch instructions.</p>
     </li><li name="lang.LightAndroid.Pattern" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Pattern=scala.util.matching.Regex"></a>
       <a id="Pattern:Pattern"></a>
@@ -421,7 +427,7 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Regular expressions for pattern matching, e.g., classes, methods, fields, etc.</p>
     </li><li name="lang.LightAndroid.Range" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Range=(LightAndroid.this.Label,LightAndroid.this.Label)"></a>
       <a id="Range:Range"></a>
@@ -438,7 +444,7 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Label ranges for exceptions.</p>
     </li><li name="lang.LightAndroid.Register" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Register=String"></a>
       <a id="Register:Register"></a>
@@ -472,7 +478,7 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Target (instruction) labels for switches.</p>
     </li><li name="lang.LightAndroid.Tag" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Tag=String"></a>
       <a id="Tag:Tag"></a>
@@ -506,7 +512,7 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Target (instruction) labels to catch exceptions.</p>
     </li><li name="lang.LightAndroid.Type" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Type=LightAndroid.this.Name"></a>
       <a id="Type:Type"></a>
@@ -582,6 +588,23 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="lang.LightAndroid.array" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="array"></a>
+      <a id="array:array"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="LightAndroid$array$.html"><span class="name">array</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#lang.LightAndroid@array" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The array-data table recording the target register.</p><div class="fullcomment"><div class="comment cmt"><p>The array-data table recording the target register.</p></div><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>Each row is uniquely identified by the quadrupes: classes, methods, method types and (switch instruction) labels.</p></span></dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -639,6 +662,23 @@
       </a>
     </span>
       
+    </li><li name="lang.LightAndroid.dex" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="dex"></a>
+      <a id="dex:dex"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="LightAndroid$dex$.html"><span class="name">dex</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#lang.LightAndroid@dex" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Convert the output of &quot;dexdump -d classes.dex&quot;  to programs in light Android.</p>
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
       <a id="eq(AnyRef):Boolean"></a>
@@ -673,6 +713,23 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="lang.LightAndroid.except" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="except"></a>
+      <a id="except:except"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="LightAndroid$except$.html"><span class="name">except</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#lang.LightAndroid@except" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The try-and-catch table.</p><div class="fullcomment"><div class="comment cmt"><p>The try-and-catch table.</p></div><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>Each row is uniquely identified by the quadrupe: classes, methods, method types and (instruction) label ranges.</p></span></dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -730,6 +787,23 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="lang.LightAndroid.instance_field" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="instance_field"></a>
+      <a id="instance_field:instance_field"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="LightAndroid$instance_field$.html"><span class="name">instance_field</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#lang.LightAndroid@instance_field" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The map from a class to its list of instance fields.</p>
     </li><li name="lang.LightAndroid.interface" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="interface"></a>
       <a id="interface:interface"></a>
@@ -764,6 +838,23 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="lang.LightAndroid.method" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="method"></a>
+      <a id="method:method"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="LightAndroid$method$.html"><span class="name">method</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#lang.LightAndroid@method" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The method definition table.</p><div class="fullcomment"><div class="comment cmt"><p>The method definition table.</p></div><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>A method is uniquely identified by its class, name and type.</p></span></dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
       <a id="ne(AnyRef):Boolean"></a>
@@ -815,6 +906,23 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="lang.LightAndroid.static_field" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="static_field"></a>
+      <a id="static_field:static_field"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="LightAndroid$static_field$.html"><span class="name">static_field</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#lang.LightAndroid@static_field" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The map from a class to its list of static fields.</p>
     </li><li name="lang.LightAndroid.superclass" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="superclass"></a>
       <a id="superclass:superclass"></a>
@@ -832,6 +940,23 @@
       </a>
     </span>
       <p class="shortcomment cmt">The map from a class to its superclass.</p>
+    </li><li name="lang.LightAndroid.switch" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="switch"></a>
+      <a id="switch:switch"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="LightAndroid$switch$.html"><span class="name">switch</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#lang.LightAndroid@switch" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The switch table recording the instruction label and its dependant register.</p><div class="fullcomment"><div class="comment cmt"><p>The switch table recording the instruction label and its dependant register.</p></div><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>Each row is uniquely identified by the quadrupes: classes, methods, method types and (switch instruction) labels.</p></span></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>
