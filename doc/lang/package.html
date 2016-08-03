@@ -94,13 +94,13 @@
 |  <span class="kw">new</span>-instance t C          -&gt; <span class="kw">new</span> t C            |  div, rem, and, or, xor, shl,                                     |
 |  <span class="kw">new</span>-array t n C           -&gt; <span class="kw">new</span> t n            |  shr, ushr, instance-of t s C   -&gt; op t s s', op t s a, op t s C  |
 +--------------------------------------------------+-------------------------------------------------------------------+
-|  filled-<span class="kw">new</span>-array args C   -&gt; <span class="kw">new</span> t #args args   |  goto l                         -&gt; jmp l                          |
+|  filled-<span class="kw">new</span>-array as C     -&gt; <span class="kw">new</span> t #as as       |  goto l                         -&gt; jmp l                          |
 +--------------------------------------------------+-------------------------------------------------------------------+
 |  fill-array t l               jmp l              |  <span class="kw">if</span>-* s l                       -&gt; jmp l s                        |
-|  l: array-data n as        -&gt; <span class="kw">new</span> t n as         |  <span class="kw">if</span>-* s s' l                    -&gt; jmp l s s'                     |
+|  l: array-data #as as      -&gt; <span class="kw">new</span> t #as as       |  <span class="kw">if</span>-* s s' l                    -&gt; jmp l s s'                     |
 +--------------------------------------------------+-------------------------------------------------------------------+
 |  l: invoke args C m T      -&gt; inv r C.m:T args   |  *-switch s l                      jmp l                          |
-|  l+<span class="num">1</span>: move-result t        -&gt; mov t r            |  l: *-switch-data keys ls       -&gt; jmp ls s                       |
+|  l+<span class="num">1</span>: move-result t        -&gt; mov t r            |  l: *-switch-data keys ls       -&gt; switch ls s                    |
 +--------------------------------------------------+-------------------------------------------------------------------+
 |  <span class="kw">return</span>-void               -&gt; ret                |  <span class="kw">return</span> s                       -&gt; ret s                          |
 +--------------------------------------------------+-------------------------------------------------------------------+</pre></div><dl class="attributes block"> <div class="block">Example:

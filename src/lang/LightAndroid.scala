@@ -38,13 +38,13 @@ import scala.sys.process._
  * |  new-instance t C          -> new t C            |  div, rem, and, or, xor, shl,                                     |
  * |  new-array t n C           -> new t n            |  shr, ushr, instance-of t s C   -> op t s s', op t s a, op t s C  |
  * +--------------------------------------------------+-------------------------------------------------------------------+
- * |  filled-new-array args C   -> new t #args args   |  goto l                         -> jmp l                          |
+ * |  filled-new-array as C     -> new t #as as       |  goto l                         -> jmp l                          |
  * +--------------------------------------------------+-------------------------------------------------------------------+
  * |  fill-array t l               jmp l              |  if-* s l                       -> jmp l s                        | 
- * |  l: array-data n as        -> new t n as         |  if-* s s' l                    -> jmp l s s'                     |
+ * |  l: array-data #as as      -> new t #as as       |  if-* s s' l                    -> jmp l s s'                     |
  * +--------------------------------------------------+-------------------------------------------------------------------+
  * |  l: invoke args C m T      -> inv r C.m:T args   |  *-switch s l                      jmp l                          |
- * |  l+1: move-result t        -> mov t r            |  l: *-switch-data keys ls       -> jmp ls s                       |
+ * |  l+1: move-result t        -> mov t r            |  l: *-switch-data keys ls       -> switch ls s                    |
  * +--------------------------------------------------+-------------------------------------------------------------------+
  * |  return-void               -> ret                |  return s                       -> ret s                          |
  * +--------------------------------------------------+-------------------------------------------------------------------+
@@ -186,7 +186,7 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
   /**
    * Formal arguments of methods. 
    */
-  type Arguments = List[String]
+  type Args = List[String]
   /**
    * Instruction labels.
    */
@@ -196,9 +196,13 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
    */
   type Body = List[(Label, Ins)]
   /**
+   * Registers used by a method. 
+   */
+  type Regs = List[String] 
+  /**
    * Method definitions. 
    */
-  type Method = (Arguments, Body)
+  type Method = (Args, Body, Regs)
   /**
    * Method types. 
    */
@@ -211,7 +215,7 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
   object method { 
     private val tb = Map[(Class, Name, MtdType), Method]()
     
-    def args(cls:Class, name:Name, typ:MtdType) : Option[Arguments] =
+    def args(cls:Class, name:Name, typ:MtdType) : Option[Args] =
       (tb get (cls,name,typ)) match {
         case Some(elem) => Some(elem._1)
         case None => None
@@ -223,11 +227,17 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
         case None => None
       }
    
+    def regs(cls:Class, name:Name, typ:MtdType) : Option[Regs] =
+      (tb get (cls,name,typ)) match {
+        case Some(elem) => Some(elem._3)
+        case None => None
+      }
+    
     /**
      *  Add a new method.
      */ 
-    def insert (cls:Class, name:Name, args:Arguments, typ:MtdType) : Unit = 
-      tb += ((cls,name,typ) -> (args, List()))
+    def insert (cls:Class, name:Name, args:Args, typ:MtdType, regs:Regs) : Unit = 
+      tb += ((cls,name,typ) -> (args, List(), regs))
      
     /**
      * Insert an instruction into the body of a method.
@@ -241,7 +251,11 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
         case Some(elem) => elem
         case None => Nil
       }
-      tb += ((cls,name,typ) -> (args, (label, ins) :: body))
+      val regs = this.regs(cls,name,typ) match {
+        case Some(elem) => elem
+        case None => Nil 
+      }
+      tb += ((cls,name,typ) -> (args, (label, ins) :: body, regs))
     }
 
     /**
@@ -844,6 +858,7 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
     private var num_regs = 0
     private var num_args = 0
     private var args = List[String]()
+    private var regs = List[String]()
     private var ins : Ins = new Ins
     private var offset:Offset = "" 
     private var label:Label = "" 
@@ -892,7 +907,8 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
                  *      All methods in classes have a default argument: this.
                  */
                 args = ((num_regs - num_args - 1) to (num_regs - 1) toList).map(x => "v" + x.toString)
-                method.insert(cls, mtd, args, typ)
+                regs = (0 to (num_regs - 1) toList).map(x => "v" + x.toString)
+                method.insert(cls, mtd, args, typ, regs)
               case "CODE" =>
                 OFFSET.findFirstIn(line) match {
                   case Some(name) => offset = Integer.parseInt(name.substring(0, name.length - 1), 16).toString //remove the symbol ":"
@@ -923,7 +939,7 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
                   var target_labels = List[String]() 
                   for (t <- extra_data(offset))
                     target_labels ::= (t + original_label.toLong).toString
-                  ins = new Ins("jmp", target_labels, List(register))
+                  ins = new Ins("switch", target_labels, List(register))
                 } else if (operator == "fillarray") { // fill-array-data
                   val array_data_label = sources.head 
                   val register = targets.head
@@ -951,7 +967,7 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
             }
         }
       }
-      // if (!found_pattern) println(line)
+      //debugging: if (!found_pattern) println(line) 
     }
   }
 

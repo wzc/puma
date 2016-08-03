@@ -11,4 +11,5 @@ object Main extends App {
   println(la.interface.get("Lcom/app/demo/MainActivity;"))
   println(la.method.args("Lcom/app/demo/MainActivity;", "gcd", "(II)V").toString)
   println(la.method.body("Lcom/app/demo/MainActivity;", "gcd", "(II)V").toString)
+  println(la.method.regs("Lcom/app/demo/MainActivity;", "gcd", "(II)V").toString)
 }

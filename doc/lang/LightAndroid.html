@@ -61,13 +61,13 @@
 |  <span class="kw">new</span>-instance t C          -&gt; <span class="kw">new</span> t C            |  div, rem, and, or, xor, shl,                                     |
 |  <span class="kw">new</span>-array t n C           -&gt; <span class="kw">new</span> t n            |  shr, ushr, instance-of t s C   -&gt; op t s s', op t s a, op t s C  |
 +--------------------------------------------------+-------------------------------------------------------------------+
-|  filled-<span class="kw">new</span>-array args C   -&gt; <span class="kw">new</span> t #args args   |  goto l                         -&gt; jmp l                          |
+|  filled-<span class="kw">new</span>-array as C     -&gt; <span class="kw">new</span> t #as as       |  goto l                         -&gt; jmp l                          |
 +--------------------------------------------------+-------------------------------------------------------------------+
 |  fill-array t l               jmp l              |  <span class="kw">if</span>-* s l                       -&gt; jmp l s                        |
-|  l: array-data n as        -&gt; <span class="kw">new</span> t n as         |  <span class="kw">if</span>-* s s' l                    -&gt; jmp l s s'                     |
+|  l: array-data #as as      -&gt; <span class="kw">new</span> t #as as       |  <span class="kw">if</span>-* s s' l                    -&gt; jmp l s s'                     |
 +--------------------------------------------------+-------------------------------------------------------------------+
 |  l: invoke args C m T      -&gt; inv r C.m:T args   |  *-switch s l                      jmp l                          |
-|  l+<span class="num">1</span>: move-result t        -&gt; mov t r            |  l: *-switch-data keys ls       -&gt; jmp ls s                       |
+|  l+<span class="num">1</span>: move-result t        -&gt; mov t r            |  l: *-switch-data keys ls       -&gt; switch ls s                    |
 +--------------------------------------------------+-------------------------------------------------------------------+
 |  <span class="kw">return</span>-void               -&gt; ret                |  <span class="kw">return</span> s                       -&gt; ret s                          |
 +--------------------------------------------------+-------------------------------------------------------------------+</pre></div><dl class="attributes block"> <div class="block">Example:
@@ -138,19 +138,19 @@ la.method.body(<span class="lit">"Lcom/app/demo/MainActivity;"</span>, <span cla
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="lang.LightAndroid.Arguments" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="Arguments=List[String]"></a>
-      <a id="Arguments:Arguments"></a>
+              <ol><li name="lang.LightAndroid.Args" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Args=List[String]"></a>
+      <a id="Args:Args"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">type</span>
       </span>
       <span class="symbol">
-        <span class="name">Arguments</span><span class="result"> = <span class="extype" name="scala.collection.immutable.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+        <span class="name">Args</span><span class="result"> = <span class="extype" name="scala.collection.immutable.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#lang.LightAndroid@Arguments=List[String]" title="Permalink" target="_top">
+      <a href="../index.html#lang.LightAndroid@Args=List[String]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -310,7 +310,7 @@ la.method.body(<span class="lit">"Lcom/app/demo/MainActivity;"</span>, <span cla
     </span>
       <p class="shortcomment cmt">Instruction labels.</p>
     </li><li name="lang.LightAndroid.Method" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="Method=(LightAndroid.this.Arguments,LightAndroid.this.Body)"></a>
+      <a id="Method=(LightAndroid.this.Args,LightAndroid.this.Body,LightAndroid.this.Regs)"></a>
       <a id="Method:Method"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -318,10 +318,10 @@ la.method.body(<span class="lit">"Lcom/app/demo/MainActivity;"</span>, <span cla
         <span class="kind">type</span>
       </span>
       <span class="symbol">
-        <span class="name">Method</span><span class="result"> = (<a href="#Arguments=List[String]" class="extmbr" name="lang.LightAndroid.Arguments">Arguments</a>, <a href="#Body=List[(LightAndroid.this.Label,LightAndroid.this.Ins)]" class="extmbr" name="lang.LightAndroid.Body">Body</a>)</span>
+        <span class="name">Method</span><span class="result"> = (<a href="#Args=List[String]" class="extmbr" name="lang.LightAndroid.Args">Args</a>, <a href="#Body=List[(LightAndroid.this.Label,LightAndroid.this.Ins)]" class="extmbr" name="lang.LightAndroid.Body">Body</a>, <a href="#Regs=List[String]" class="extmbr" name="lang.LightAndroid.Regs">Regs</a>)</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#lang.LightAndroid@Method=(LightAndroid.this.Arguments,LightAndroid.this.Body)" title="Permalink" target="_top">
+      <a href="../index.html#lang.LightAndroid@Method=(LightAndroid.this.Args,LightAndroid.this.Body,LightAndroid.this.Regs)" title="Permalink" target="_top">
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -462,6 +462,23 @@ la.method.body(<span class="lit">"Lcom/app/demo/MainActivity;"</span>, <span cla
       </a>
     </span>
       
+    </li><li name="lang.LightAndroid.Regs" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Regs=List[String]"></a>
+      <a id="Regs:Regs"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Regs</span><span class="result"> = <span class="extype" name="scala.collection.immutable.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#lang.LightAndroid@Regs=List[String]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Registers used by a method.</p>
     </li><li name="lang.LightAndroid.SwitchLabel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="SwitchLabel=LightAndroid.this.Label"></a>
       <a id="SwitchLabel:SwitchLabel"></a>
