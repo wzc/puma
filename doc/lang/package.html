@@ -82,10 +82,10 @@
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Convert Android apps in Dalvik code into programs in the abstract analysis language: light Android.</p><div class="fullcomment"><div class="comment cmt"><p>Convert Android apps in Dalvik code into programs in the abstract analysis language: light Android.</p><p>This translation simplifies code by reducing more than 200 Dalvik opcodes into 7 abstract instructions.</p><p>It preserves semantics for further behavioural analysis of Android apps.</p><p>The map from Dalvik opcodes to abstract instructions in light Android is as follows.</p><pre>+--------------------------------------------------+-------------------------------------------------------------------+
+      <p class="shortcomment cmt">Convert Android apps in Dalvik code into programs in the abstract analysis language: light Android.</p><div class="fullcomment"><div class="comment cmt"><p>Convert Android apps in Dalvik code into programs in the abstract analysis language: light Android.</p><p>This translation simplifies code by reducing more than 200 Dalvik opcodes into 6 abstract instructions.</p><p>It preserves semantics for further behavioural analysis of Android apps.</p><p>The map from Dalvik opcodes to abstract instructions in light Android is as follows.</p><pre>+--------------------------------------------------+-------------------------------------------------------------------+
 |  move t s                  -&gt; mov t s            |  nop, monitor s,                                                  |
 |  const t a                 -&gt; mov t a            |  move-exception t,                                                |
-|  iget t s f, aget t s f    -&gt; mov t s.f          |  check-cast s C, <span class="kw">throw</span> e        -&gt; op                             |
+|  iget t s f, aget t s f    -&gt; mov t s.f          |  check-cast s C                 -&gt; op                             |
 +--------------------------------------------------+-------------------------------------------------------------------+
 |  iput s t f, aput s t f    -&gt; mov t.f s          |  neg t s, not t s, *-to-* t s,                                    |
 |  sget t C f                -&gt; mov t C.f          |  array-length t s               -&gt; op t s                         |
@@ -100,9 +100,9 @@
 |  l: array-data #as as      -&gt; <span class="kw">new</span> t #as as       |  <span class="kw">if</span>-* s s' l                    -&gt; jmp l s s'                     |
 +--------------------------------------------------+-------------------------------------------------------------------+
 |  l: invoke args C m T      -&gt; inv r C.m:T args   |  *-switch s l                      jmp l                          |
-|  l+<span class="num">1</span>: move-result t        -&gt; mov t r            |  l: *-switch-data keys ls       -&gt; switch ls s                    |
+|  l+<span class="num">1</span>: move-result t        -&gt; mov t r            |  l: *-switch-data keys ls       -&gt; jmp ls s                       |
 +--------------------------------------------------+-------------------------------------------------------------------+
-|  <span class="kw">return</span>-void               -&gt; ret                |  <span class="kw">return</span> s                       -&gt; ret s                          |
+|  <span class="kw">return</span>-void, <span class="kw">throw</span> e      -&gt; ret                |  <span class="kw">return</span> s                       -&gt; ret s                          |
 +--------------------------------------------------+-------------------------------------------------------------------+</pre></div><dl class="attributes block"> <div class="block">Example:
                <ol><li class="cmt"><p></p><pre><span class="kw">val</span> la = <span class="kw">new</span> LightAndroid(<span class="lit">"./exp/classes.dex"</span>, <span class="lit">"./exp/dex_dump.txt"</span>)</pre><p>creates an instance of LightAndroid from the .dex file &quot;classes.dex&quot; and &quot;dex_dump.txt&quot; which is output of the command &quot;dexdump -d classes.dex&quot;.</p><pre>la.superclass.get(<span class="lit">"Lcom/app/demo/MainActivity;"</span>)
 la.interface.get(<span class="lit">"Lcom/app/demo/MainActivity;"</span>)

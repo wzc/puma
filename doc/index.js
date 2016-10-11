@@ -1,1 +1,1 @@
-Index.PACKAGES = {"lang" : [{"class" : "lang\/LightAndroid.html", "name" : "lang.LightAndroid"}]};
+Index.PACKAGES = {"effect" : [{"class" : "effect\/Tiny.html", "name" : "effect.Tiny"}]};

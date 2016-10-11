@@ -18,7 +18,7 @@ import scala.sys.process._
 /**
  * Convert Android apps in Dalvik code into programs in the abstract analysis language: light Android.
  * 
- * This translation simplifies code by reducing more than 200 Dalvik opcodes into 7 abstract instructions.
+ * This translation simplifies code by reducing more than 200 Dalvik opcodes into 6 abstract instructions.
  *
  * It preserves semantics for further behavioural analysis of Android apps.  
  *
@@ -29,7 +29,7 @@ import scala.sys.process._
  * +--------------------------------------------------+-------------------------------------------------------------------+
  * |  move t s                  -> mov t s            |  nop, monitor s,                                                  | 
  * |  const t a                 -> mov t a            |  move-exception t,                                                |
- * |  iget t s f, aget t s f    -> mov t s.f          |  check-cast s C, throw e        -> op                             | 
+ * |  iget t s f, aget t s f    -> mov t s.f          |  check-cast s C                 -> op                             | 
  * +--------------------------------------------------+-------------------------------------------------------------------+
  * |  iput s t f, aput s t f    -> mov t.f s          |  neg t s, not t s, *-to-* t s,                                    |
  * |  sget t C f                -> mov t C.f          |  array-length t s               -> op t s                         | 
@@ -44,9 +44,9 @@ import scala.sys.process._
  * |  l: array-data #as as      -> new t #as as       |  if-* s s' l                    -> jmp l s s'                     |
  * +--------------------------------------------------+-------------------------------------------------------------------+
  * |  l: invoke args C m T      -> inv r C.m:T args   |  *-switch s l                      jmp l                          |
- * |  l+1: move-result t        -> mov t r            |  l: *-switch-data keys ls       -> switch ls s                    |
+ * |  l+1: move-result t        -> mov t r            |  l: *-switch-data keys ls       -> jmp ls s                       |
  * +--------------------------------------------------+-------------------------------------------------------------------+
- * |  return-void               -> ret                |  return s                       -> ret s                          |
+ * |  return-void, throw e      -> ret                |  return s                       -> ret s                          |
  * +--------------------------------------------------+-------------------------------------------------------------------+
  * }}}
  *
@@ -675,7 +675,7 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
     opExp += (FILLARRAY -> "fillarray")
     opExp += (PSWITCH -> "switch")
     opExp += (SSWITCH -> "switch")
-    opExp += (THROW -> "op")
+    opExp += (THROW -> "ret")
     opExp += (GOTO -> "jmp")
     opExp += (CMP -> "op")
     opExp += (IF -> "jmp")
@@ -939,7 +939,7 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
                   var target_labels = List[String]() 
                   for (t <- extra_data(offset))
                     target_labels ::= (t + original_label.toLong).toString
-                  ins = new Ins("switch", target_labels, List(register))
+                  ins = new Ins("jmp", target_labels, List(register))
                 } else if (operator == "fillarray") { // fill-array-data
                   val array_data_label = sources.head 
                   val register = targets.head
