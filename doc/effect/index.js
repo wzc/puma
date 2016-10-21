@@ -1,0 +1,1 @@
+Index.PACKAGES = {"effect" : [{"class" : "effect\/Tiny.html", "name" : "effect.Tiny"}]};

@@ -1,0 +1,183 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>effect - effect</title>
+          <meta name="description" content="effect - effect" />
+          <meta name="keywords" content="effect effect" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../lib/template.js"></script>
+      <script type="text/javascript" src="../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../index.html';
+            var hash = 'effect.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../lib/package_big.png" />
+        
+        <h1>effect</h1><span class="permalink">
+      <a href="../index.html#effect.package" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">effect</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="effect.Tiny" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="TinyextendsAnyRef"></a>
+      <a id="Tiny:Tiny"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Tiny.html"><span class="name">Tiny</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#effect.package@TinyextendsAnyRef" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Produce effects for programs in a tiny language.</p><div class="fullcomment"><div class="comment cmt"><p>Produce effects for programs in a tiny language.</p><pre>Ins := mov t s | op t s | jmp l s | ret s | inv n s
+       <span class="kw">with</span> s and t in Reg, l in Lab, and n in Nam
+prg: Nam -&gt; Reg * (Lab -&gt; Ins)</pre><p>Big-Step Operational Semantics.</p><pre>S: Nam * Reg -&gt; Val
+
+S[(m,t) -&gt; S(m,s)] |- r,m,l+<span class="num">1</span>: _  <span class="kw">=&gt;</span> S'               S[(m,t) -&gt; h(S(m,s))] |- r,m,l+<span class="num">1</span>: _ <span class="kw">=&gt;</span> S'           S' = [r -&gt; S(m,s)]
+---------------------------------------               -----------------------------------------           -----------------------
+S |- r,m,l: mov t s <span class="kw">=&gt;</span> S'                             S |- r,m,l: op t s <span class="kw">=&gt;</span> S'                            S |- r,m,l: ret s <span class="kw">=&gt;</span> S'
+
+(x,B) = prg(n)
+S[(n,x) -&gt; S(m,s)] |- (m,l),n,<span class="num">0</span>: _ <span class="kw">=&gt;</span> S'              n not in dom(prg)                                   k = h(S(m,s)) ? l' : (l+<span class="num">1</span>)
+S' |- r,m,l+<span class="num">1</span>: _ <span class="kw">=&gt;</span> S<span class="lit">''</span>                               S |- r,m,l+<span class="num">1</span>: _ <span class="kw">=&gt;</span> S'                               S |- r,m,k: _ <span class="kw">=&gt;</span> S'
+---------------------------------------               --------------------------                          --------------------------
+S |- r,m,l: inv n s <span class="kw">=&gt;</span> S<span class="lit">''</span>                            S |- r,m,l: inv n s <span class="kw">=&gt;</span> S'                           S |- r,m,l: jmp l' s <span class="kw">=&gt;</span> S'
+
+(_,B) = prg(m)   l not in dom(B)
+--------------------------------                      ------------------
+S |- r,m,l: _ <span class="kw">=&gt;</span> S                                    S |- r,m,l: _ <span class="kw">=&gt;</span> S</pre><p>The Effect System.</p><pre>p in Plc := (m,s) | (?,s) | (?,?)                     <span class="kw">with</span> ? unknown
+e in Exp := ? | !p | h(e)                             <span class="kw">with</span> h in Nam
+w, y in Trc = Nam^*
+
+A(p) = {e | e@p in A}                                 <span class="kw">with</span> A a relation between Exp and Plc
+B[A(p)/!p] = {e[e<span class="lit">'/!p]@p'</span>|e@p' in B and e' in A(p)}
+A ; B = A U B[..,A(p),../..,!p,..]                    simultaneous substitution
+(w, A) ; (y, B) = (w . y, A ; B)
+A ; {} = A = {} ; A                                   unit
+u . w = w  = w . u
+(u, {}) ; (w, A) = (w, A) = (w, A) ; (u, {})
+E ; (E1 U E2) = (E ; E1) U (E ; E2)                   distribution
+(E1 U E2) ; E = (E1 ; E) U (E2 ; E)
+
+E in Eff := {(w, A)} | X_(m,l) | muX_(m,l).E | E1 U E2 | E1 ; E2
+T in Ctx := {X_(m,l)} | T1 U T2 | {}
+
+T |- r,m,l+<span class="num">1</span>: _ &amp; E                                   T |- r,m,l+<span class="num">1</span>: _ &amp; E
+E' = {(u, {!(m,s)@(m,t)})} ; E                        E' = {(u, {h(!(m,s))@(m,t)})} ; E                   E = {(u, {!(m,s)@r})}
+------------------------------                        ---------------------------------                   ---------------------
+T |- r,m,l: mov t s &amp; E'                              T |- r,m,l: op t s &amp; E'                             T |- r,m,l: ret s &amp; E
+
+(x, B) = prg(n)
+T, X_(m,l) |- (m,:l),n,: _ &amp; E1
+T, X_(m,l) |- r,m,l+<span class="num">1</span>: _ &amp; E2                         n not in dom(prg)
+E1' = {(n, {!(m,s)@(n,x)})} ; E1                      T, X_(m,l) |- r,m,l+<span class="num">1</span>: _ &amp; E2                       E1 = X_(m,l) U {(u, {})}
+E<span class="lit">' = (E1'</span> ; E2) U ({(n, {n(!(m,s))@(m,:l)})} ; E2)    E' = {(n, {n(!(m,s))@(m,:l)})} ; E2                 T, X_(m,l) |- r,m,l+<span class="num">1</span>: _ &amp; E2
+E = muX_(m,l).E'                                      E = muX_(m,l).E'                                    E = E1<span class="lit">' ; E2'</span>
+-------------------------------------------------     ------------------------------------                --------------------------------
+T |- r,m,l: inv n s &amp; E                               T |- r,m,l: inv n s &amp; E                             T, X_(m,l) |- r,m,l: inv n s &amp; E
+
+T, X_(m,l) |- r,m,l': _ &amp; E1
+T, X_(m,l) |- r,m,l+<span class="num">1</span>: _ &amp; E2
+E = muX_(m,l).(E1 U E2)                               E = X_(m,l) U {(u, {})}                             (_,B) = prg(m)   l not in dom(B)
+-----------------------------                         ---------------------------------                   --------------------------------
+T |- r,m,l: jmp l' s &amp; E                              T, X_(m,l) |- r,m,l: jmp l' s &amp; E                   T |- r,m,l: _ &amp; {(u, {})}</pre><p>Example A: loop</p><pre><span class="num">0</span>: jmp <span class="num">0</span> x                  E = muX_(?,<span class="num">0</span>).((X_(?,<span class="num">0</span>) U {(,{})}) U {(,{})})
+                              = {(,{})}</pre><p>Example B: recursion</p><pre><span class="num">0</span>: inv f s                E1' = {(f,{!(f,x)@(f,x)})} ; (X_(f,<span class="num">0</span>) U {(,{})})
+<span class="kw">def</span> f x = <span class="num">0</span>: inv f x      E2' = {(f,{f(!(f,x))@(f,:<span class="num">0</span>)})}
+                          E'  = muX_(f,<span class="num">0</span>).(E1<span class="lit">' U E2'</span>)
+                          E   = muX_(?,<span class="num">0</span>).(({(f,{!(?,s)@(f,x)})} ; E') U {(f,{f(!(?,s))@(?,:<span class="num">0</span>)})})
+                              = {(ff+,{!(?,s)@(f,x), f(!(?,s))@(f,:<span class="num">0</span>)}), (f,{f(!(?,s))@(?,:<span class="num">0</span>)})}</pre><p>Example C: context-sensitive</p><pre><span class="num">0</span>: inv f s                  E = {(ff,{{!(?,s),!(?,t)}@(f,x),{!(?,s),f(!(?,s))}@(?,:<span class="num">0</span>),{!(?,t),f(!(?,t))}@(?,:<span class="num">1</span>)})}
+<span class="num">1</span>: inv f t
+<span class="kw">def</span> f x = <span class="num">0</span>: ret x</pre><p>Example D: flow-sensitive</p><pre><span class="num">0</span>: jmp <span class="num">2</span> s                  E = {(fg, {!(?,s)@(f,x), f(!(?,s))@(?,:<span class="num">1</span>), !(?,s)@(g,x), {!(?,s), g(!(?,s))}@(?,:<span class="num">2</span>)}),
+<span class="num">1</span>: inv f s                       (g,  {!(?,s)@(g,x), {!(?,s), g(!(?,s))}@(?,:<span class="num">2</span>)})}
+<span class="num">2</span>: inv g s
+<span class="kw">def</span> f x
+<span class="kw">def</span> g x = <span class="num">0</span>: ret x</pre><p>Example E: source-to-sink</p><pre><span class="num">0</span>: inv f s                  E = {(fg, {!(?,s)@(f,x), !(?,:<span class="num">0</span>)@(g,x),    g(!(?,:<span class="num">0</span>))@(?,:<span class="num">1</span>),
+<span class="num">1</span>: inv g :<span class="num">0</span>                      f(!(?,s))@(?,:<span class="num">0</span>), f(!(?,s))@(g,x), g(f(!(?,:<span class="num">0</span>)))@(?,:<span class="num">1</span>)})}
+<span class="kw">def</span> f x
+<span class="kw">def</span> g x</pre></div></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
