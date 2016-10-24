@@ -253,6 +253,23 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="effect.Tiny.prg#eval" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="eval(es:scala.collection.mutable.Map[Tiny.this.Var,Tiny.this.Eff],as:scala.collection.mutable.Map[Tiny.this.Var,Tiny.this.Atm]):scala.collection.mutable.Map[Tiny.this.Var,Tiny.this.Eff]"></a>
+      <a id="eval(Map[Var,Eff],Map[Var,Atm]):Map[Var,Eff]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eval</span><span class="params">(<span name="es">es: <span class="extype" name="scala.collection.mutable.Map">Map</span>[<a href="Tiny$Var.html" class="extype" name="effect.Tiny.Var">Var</a>, <a href="Tiny$Eff.html" class="extype" name="effect.Tiny.Eff">Eff</a>]</span>, <span name="as">as: <span class="extype" name="scala.collection.mutable.Map">Map</span>[<a href="Tiny$Var.html" class="extype" name="effect.Tiny.Var">Var</a>, <a href="Tiny$Atm.html" class="extype" name="effect.Tiny.Atm">Atm</a>]</span>)</span><span class="result">: <span class="extype" name="scala.collection.mutable.Map">Map</span>[<a href="Tiny$Var.html" class="extype" name="effect.Tiny.Var">Var</a>, <a href="Tiny$Eff.html" class="extype" name="effect.Tiny.Eff">Eff</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#effect.Tiny$prg$@eval(es:scala.collection.mutable.Map[Tiny.this.Var,Tiny.this.Eff],as:scala.collection.mutable.Map[Tiny.this.Var,Tiny.this.Atm]):scala.collection.mutable.Map[Tiny.this.Var,Tiny.this.Eff]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Evaluate an effect system by assigning atoms to variables.</p>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -276,6 +293,23 @@
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="effect.Tiny.prg#foo" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="foo:Unit"></a>
+      <a id="foo:Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">foo</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#effect.Tiny$prg$@foo:Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <a id="getClass():Class[_]"></a>
@@ -481,22 +515,39 @@
     </span>
       
     </li><li name="effect.Tiny.prg#ref_var" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="ref_var(eff:Tiny.this.Eff,v:Tiny.this.Var):Boolean"></a>
-      <a id="ref_var(Eff,Var):Boolean"></a>
+      <a id="ref_var(v:Tiny.this.Var,eff:Tiny.this.Eff):Boolean"></a>
+      <a id="ref_var(Var,Eff):Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ref_var</span><span class="params">(<span name="eff">eff: <a href="Tiny$Eff.html" class="extype" name="effect.Tiny.Eff">Eff</a></span>, <span name="v">v: <a href="Tiny$Var.html" class="extype" name="effect.Tiny.Var">Var</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">ref_var</span><span class="params">(<span name="v">v: <a href="Tiny$Var.html" class="extype" name="effect.Tiny.Var">Var</a></span>, <span name="eff">eff: <a href="Tiny$Eff.html" class="extype" name="effect.Tiny.Eff">Eff</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#effect.Tiny$prg$@ref_var(eff:Tiny.this.Eff,v:Tiny.this.Var):Boolean" title="Permalink" target="_top">
+      <a href="../index.html#effect.Tiny$prg$@ref_var(v:Tiny.this.Var,eff:Tiny.this.Eff):Boolean" title="Permalink" target="_top">
         <img src="../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Decide whether a variable appears in an effect.</p><div class="fullcomment"><div class="comment cmt"><p>Decide whether a variable appears in an effect.</p></div><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>Have to search the effect table since a variable might be referred indirectly.</p></span></dd></dl></div>
+      <p class="shortcomment cmt">Decide whether a variable refers to itself.</p><div class="fullcomment"><div class="comment cmt"><p>Decide whether a variable refers to itself.</p></div><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>Have to search the effect table since a variable might be referred indirectly.</p></span></dd></dl></div>
+    </li><li name="effect.Tiny.prg#sub_eff" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="sub_eff(eff:Tiny.this.Eff,v:Tiny.this.Var,a:Tiny.this.Atm):Tiny.this.Eff"></a>
+      <a id="sub_eff(Eff,Var,Atm):Eff"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">sub_eff</span><span class="params">(<span name="eff">eff: <a href="Tiny$Eff.html" class="extype" name="effect.Tiny.Eff">Eff</a></span>, <span name="v">v: <a href="Tiny$Var.html" class="extype" name="effect.Tiny.Var">Var</a></span>, <span name="a">a: <a href="Tiny$Atm.html" class="extype" name="effect.Tiny.Atm">Atm</a></span>)</span><span class="result">: <a href="Tiny$Eff.html" class="extype" name="effect.Tiny.Eff">Eff</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#effect.Tiny$prg$@sub_eff(eff:Tiny.this.Eff,v:Tiny.this.Var,a:Tiny.this.Atm):Tiny.this.Eff" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Substitute an effect for a variable in an effect.</p>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>
@@ -566,6 +617,23 @@
       </a>
     </span>
       <p class="shortcomment cmt">The unit of concatenation of effects</p>
+    </li><li name="effect.Tiny.prg#vars" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="vars(eff:Tiny.this.Eff):List[Tiny.this.Var]"></a>
+      <a id="vars(Eff):List[Var]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">vars</span><span class="params">(<span name="eff">eff: <a href="Tiny$Eff.html" class="extype" name="effect.Tiny.Eff">Eff</a></span>)</span><span class="result">: <span class="extype" name="scala.List">List</span>[<a href="Tiny$Var.html" class="extype" name="effect.Tiny.Var">Var</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#effect.Tiny$prg$@vars(eff:Tiny.this.Eff):List[Tiny.this.Var]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">List all variables appearing in an effect</p>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
@@ -635,6 +703,23 @@
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="effect.Tiny.prg#zero" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="zero:List[Nothing]"></a>
+      <a id="zero:List[Nothing]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">zero</span><span class="result">: <span class="extype" name="scala.collection.immutable.List">List</span>[<span class="extype" name="scala.Nothing">Nothing</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#effect.Tiny$prg$@zero:List[Nothing]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The zero of concatenation of effects</p>
     </li></ol>
             </div>
 

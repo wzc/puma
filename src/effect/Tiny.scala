@@ -127,7 +127,7 @@ class Tiny (prg_file:String) {
   type Reg = String
   type Lab = String 
   type Plc = String
-  type Trc = String
+  type Trc = Nam
   
   /** Instruction. */
   class Ins (operator:String, target:String, source:String){
@@ -226,8 +226,7 @@ class Tiny (prg_file:String) {
   case class Uni(ea:Eff, eb:Eff) extends Eff {override def toString = ea + " + " + eb} 
   /** Concatenation. */
   case class Con(ea:Eff, eb:Eff) extends Eff {override def toString = "[" + ea + " ; " + eb + "]"}
-
-
+  
   /** Context for Effect Inference */
   type Ctx = List[Var]
 
@@ -250,18 +249,21 @@ class Tiny (prg_file:String) {
       eff_tb += (v -> e)
 
     /** The unit of concatenation of effects */
-    val unit = List(("", Nil))  
+    val con_unit = List(("", Nil))  
     
+    /** The zero of concatenation of effects */
+    val zero = List()  
+
     /** Concatenation of effects. 
      * @note Apply the unit and distribution laws; simplify concatenation of two atomic effects.
      */
     def con(ea:Eff, eb:Eff): Eff = 
       ea match {
         case Atm(as) => 
-          if (as == unit) eb //unit law
+          if (as == con_unit) eb //unit law
           else eb match {
             case Atm(bs) =>
-              if (bs == unit) ea //unit law
+              if (bs == con_unit) ea //unit law
               else Atm(as).con(Atm(bs)) //concatenation of two atoms
             case Uni(ex, ey) => uni(con(ea, ex), con(ea, ey)) //distribution law 
             case _ =>  Con(ea, eb) }
@@ -269,7 +271,7 @@ class Tiny (prg_file:String) {
         case _ =>
           eb match {
             case Atm(bs) =>
-              if (bs == unit) ea
+              if (bs == con_unit) ea
               else Con(ea,eb)
             case Uni(ex, ey) => uni(con(ea, ex), con(ea, ey))
             case _ => Con(ea,eb)}}
@@ -338,13 +340,124 @@ class Tiny (prg_file:String) {
       if (ref_var(v, eff)) {insert_eff(v, eff); v} 
       else eff
 
+    /** Substitute an effect for a variable in an effect. */
+    def sub_eff(eff:Eff, v:Var, e:Eff): Eff =
+      eff match {
+        case Atm(_) => eff
+        case Var(s) => if (v == Var(s)) e else eff
+        case Uni(ea, eb) => uni(sub_eff(ea, v, e), sub_eff(eb, v, e))
+        case Con(ea, eb) => con(sub_eff(ea, v, e), sub_eff(eb, v, e)) }
+
+    /** Evaluate an effect system by assigning atoms to variables. */
+    def eval(es:Map[Var, Eff], as:Map[Var, Eff]): Map[Var, Eff] = {
+      val tb = Map[Var, Eff]()
+      for(x <- es.keys) {
+        var eff = es(x)
+        var vs = vars(eff)
+        for(v <- vs) eff = sub_eff(eff, v, as(v)) 
+        tb += (x -> eff) }
+      tb }
+
+    type Mon = String
+    val mon_unit: Mon = ""
+    val nam_to_mon = Map[Nam, Mon]()
+    nam_to_mon += ("f" -> "f")
+    nam_to_mon += ("g" -> "g")
+    nam_to_mon += ("h" -> "")
+    val monoid = Map[(Mon, Mon), Mon]()
+    monoid += ((mon_unit, mon_unit) -> mon_unit)
+    monoid += ((mon_unit, "f") -> "f")
+    monoid += ((mon_unit, "g") -> "g")
+    monoid += ((mon_unit, "fg") -> "fg")
+    monoid += (("f", mon_unit) -> "f")
+    monoid += (("f", "f") -> "f")
+    monoid += (("f", "g") -> "fg")
+    monoid += (("f", "fg") -> "fg")
+    monoid += (("g", mon_unit) -> "g")
+    monoid += (("g", "f") -> "f")
+    monoid += (("g", "g") -> "g")
+    monoid += (("g", "fg") -> "fg")
+    monoid += (("fg", mon_unit) -> "fg")
+    monoid += (("fg", "f") -> "fg")
+    monoid += (("fg", "g") -> "fg")
+    monoid += (("fg", "fg") -> "fg")
+    def alpha(n:Nam): Mon =
+      if (n.length == 0) ""
+      else monoid((nam_to_mon(n.head+""), alpha(n.tail)))
+
+    def exp_to_nams(e:Exp): List[Nam] =
+      e match {
+        case Fun(n, e) => exp_to_nams(e).map(x =>  x + n)
+        case Prt(e) => exp_to_nams(e)
+        case _ => List("") } 
+    
+    def abs_atm(as:List[(Trc, List[Eva])]): List[(Mon, List[Mon])] =
+      as match {
+        case Nil => Nil
+        case (w, evas)::xs =>  
+          (alpha(w), evas.map(eva => 
+            eva match {
+              case At(e,_) => 
+                exp_to_nams(e).map(x => alpha(x)).distinct}).flatten) :: abs_atm(xs) }
+    
+    def norm(as:List[(Mon, List[Mon])]): List[(Mon, List[Mon])] =
+      if (as == Nil) as
+      else as.foldLeft(List(as.head))((x,ea) =>
+           if (x.map(eb => ea._1 == eb._1).foldLeft(false)(_ || _)) 
+             x.map(eb => if (ea._1 == eb._1) (ea._1, (ea._2 ++ eb._2).distinct) else eb)
+           else ea::x)
+
+    def abs_eff(eff:Eff): List[(Mon, List[Mon])] = 
+      eff match {
+        case Atm(as) => norm(abs_atm(as))
+        case _ => Nil }
+
+    def abs_mem(a:(Mon, List[Mon]), as:List[(Mon, List[Mon])]): Boolean =
+      as match {
+        case Nil => false
+        case x::xs =>
+          if (a._1 == x._1 && a._2.toSet == x._2.toSet) true
+          else abs_mem(a, xs) }
+
+    def abs_eq(as:Map[Var, List[(Mon, List[Mon])]], bs:Map[Var, List[(Mon, List[Mon])]]) =
+      as.keys.map(v => bs.keys.toList contains v).foldLeft(true)(_ && _) &&
+      bs.keys.map(v => as.keys.toList contains v).foldLeft(true)(_ && _) &&
+      as.keys.map(v => 
+        as(v).map(x => abs_mem(x, bs(v))).foldLeft(true)(_ && _) &&
+        bs(v).map(x => abs_mem(x, as(v))).foldLeft(true)(_ && _)).foldLeft(true)(_ && _)
+
+    def abs(cs:Map[Var, Eff]): Map[Var, List[(Mon, List[Mon])]] = {
+      var tb = Map[Var, List[(Mon, List[Mon])]]()
+      for (v <- cs.keys) tb += (v -> abs_eff(cs(v))) 
+      tb }
+
+    def abs_iter(es:Map[Var, Eff], as:Map[Var, Eff], xs:Map[Var, List[(Mon, List[Mon])]]): Map[Var, List[(Mon, List[Mon])]] = {
+      val bs = eval(es, as)
+      val ys = abs(bs)
+      if (abs_eq(xs, ys)) xs 
+      else abs_iter(es, bs, ys) }
+
+    def abs_lfp(es:Map[Var, Eff]): Map[Var, List[(Mon, List[Mon])]] = {
+      val as = Map[Var, Eff]()
+      val xs = Map[Var, List[(Mon, List[Mon])]]()
+      for (v <- es.keys) {
+        as += (v -> Atm(zero)) 
+        xs += (v -> Nil) }
+      abs_iter(es, as, xs) }
+       
+    def foo: Unit = {
+      print_eff
+      val tb = abs_lfp(eff_tb)
+      tb.keys.foreach(v => println(v + ": " + tb(v).toString))  
+      } 
+
     def effect(ctx:Ctx, r:(Nam,Lab), m:Nam, l:Lab) : Eff = {
       val v = Var("X_" + "(" + m + "," + l + ")")
       (tb get m) match {
-        case None => Atm(unit)
+        case None => Atm(con_unit)
         case Some((_,blk)) =>  
           (blk get l) match {
-            case None => Atm(unit) 
+            case None => Atm(con_unit) 
             case Some(ins) =>
               (ins.o) match {
                 case "mov" => 
@@ -367,7 +480,7 @@ class Tiny (prg_file:String) {
                   for (x <- ctx)
                     if (x == v) found = true 
                   if (found) {
-                    uni(v, Atm(unit)) }
+                    uni(v, Atm(con_unit)) }
                   else { 
                     val k = ins.t
                     val c = v :: ctx
@@ -379,7 +492,7 @@ class Tiny (prg_file:String) {
                   for (x <- ctx)
                     if (x == v) found = true 
                   if (found) { 
-                    val e = uni(v, Atm(unit))
+                    val e = uni(v, Atm(con_unit))
                     val E = effect(ctx,r,m,(l.toInt +1).toString)
                     con(e,E) }
                   else {
@@ -395,7 +508,7 @@ class Tiny (prg_file:String) {
                         val E11 = con(Atm(List((n,List(At(Ref("("+m+","+s+")"),("("+n+","+x+")")))))), E1)
                         val E = uni(con(E11, E2), E22)
                         lfp(v, E)}}
-                case _ => Atm(unit) }}}} 
+                case _ => Atm(con_unit) }}}} 
 
     def print: Unit =
       for (nam <- tb.keys) {
@@ -450,5 +563,5 @@ class Tiny (prg_file:String) {
 
   prg.print
   println(prg.effect(Nil,("?","?"),"?","0"))
-  prg.print_eff
+  prg.foo
 }
