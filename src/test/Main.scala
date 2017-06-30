@@ -15,7 +15,7 @@ object Main extends App {
   println(la.method.body("Lcom/app/demo/MainActivity;", "gcd", "(II)V").toString)
   println(la.method.regs("Lcom/app/demo/MainActivity;", "gcd", "(II)V").toString)
   println(la.method.body("Landroid/support/graphics/drawable/PathParser;", "copyOfRange", "([FII)[F").toString)
-*/
+
   val work_dir = "/Users/weichen/exp/temp"
   var prg_file = work_dir + "/loop.tiny"
   println(prg_file)
@@ -35,4 +35,5 @@ object Main extends App {
   prg_file = work_dir + "/source-to-sink.tiny"
   println(prg_file)
   tiny = new Tiny(prg_file)
+  */
 }
