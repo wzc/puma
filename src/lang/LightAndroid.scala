@@ -71,7 +71,7 @@ import scala.sys.process._
  * }}}
  * get the definition (arguments, body), formal arguments and body of the method "gcd".
  *
- * @author Wei Chen @ University of Edinburgh, 25/06/2016 - 27/07/2016 
+ * @author Wei Chen @ University of Edinburgh, 25/06/2016 - 27/07/2016, 01/07/2017 
  * 
  */
 class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
@@ -167,7 +167,7 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
    */
   class Ins (var operator:String, var targets:List[String], var sources:List[String]) {
     def op = operator
-    def ta: List[String] = targets 
+    def ta: List[String] = targets
     def src: List[String] = sources
     /**
      * @param sources varied length arguments.
@@ -522,10 +522,10 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
     private val IFZ:Operation = ("if[-a-z]+ (v[0-9]+), ([0-9a-f]+)" + STR.toString).r
     private val AGET:Operation = ("aget[-a-z]* (v[0-9]+), (v[0-9]+), (v[0-9]+)" + STR.toString).r
     private val APUT:Operation = ("aput[-a-z]* (v[0-9]+), (v[0-9]+), (v[0-9]+)" + STR.toString).r
-    private val IGET:Operation = ("iget[-a-z]* (v[0-9]+), (v[0-9]+), (" + NAME.toString + ").(" + NAME.toString + "):" + STR.toString).r
-    private val IPUT:Operation = ("iput[-a-z]* (v[0-9]+), (v[0-9]+), (" + NAME.toString + ").(" + NAME.toString + "):" + STR.toString).r
-    private val SGET:Operation = ("sget[-a-z]* (v[0-9]+), (" + NAME.toString + ").(" + NAME.toString + "):" + STR.toString).r
-    private val SPUT:Operation = ("sput[-a-z]* (v[0-9]+), (" + NAME.toString + ").(" + NAME.toString + "):" + STR.toString).r
+    private val IGET:Operation = ("iget[-a-z]* (v[0-9]+), (v[0-9]+), (" + NAME.toString + ")\\.(" + NAME.toString + "):" + STR.toString).r
+    private val IPUT:Operation = ("iput[-a-z]* (v[0-9]+), (v[0-9]+), (" + NAME.toString + ")\\.(" + NAME.toString + "):" + STR.toString).r
+    private val SGET:Operation = ("sget[-a-z]* (v[0-9]+), (" + NAME.toString + ")\\.(" + NAME.toString + "):" + STR.toString).r
+    private val SPUT:Operation = ("sput[-a-z]* (v[0-9]+), (" + NAME.toString + ")\\.(" + NAME.toString + "):" + STR.toString).r
     private val NEG:Operation = ("neg[-a-z]+ (v[0-9]+), (v[0-9]+)" + STR.toString).r
     private val NOT:Operation = ("not[-a-z]+ (v[0-9]+), (v[0-9]+)" + STR.toString).r
     private val LONG:Operation = ("[-a-z]+to-long (v[0-9]+), (v[0-9]+)" + STR.toString).r
