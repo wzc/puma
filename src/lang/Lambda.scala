@@ -56,6 +56,6 @@ class Lambda() {
     case class Let (ea:Exp, eb:Exp, ec:Exp) extends Exp {override def toString = "let " + ea + " = " + eb + " in " + ec} 
     case class Cond (c:Exp, es:List[Exp]) extends Exp {override def toString = "cond(" + c + es.map(x => x.toString).reduceLeft(_+ " " +_) + ")"} 
   /*--End-of-Expression--------------------------------------------------------------------------------------------------------------------------------------*/
-  val x = Let (Var ("x"), Op (List(Const ("1234"), Fld ("gcd", "f"))), Const ("unit")) 
+  val x = Let (Var ("y"), Op (List(Var ("x"), Var ("y"))), Const ("unit")) 
   println(x)
 }
