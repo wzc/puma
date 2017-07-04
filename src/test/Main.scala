@@ -1,5 +1,6 @@
 package test
 import lang.LightAndroid
+import lang.Lambda
 import effect.Tiny
 
 object Main extends App {
@@ -8,10 +9,13 @@ object Main extends App {
   val classes_dex_file = work_dir + "/classes.dex"
   val dex_dump_file = work_dir + "/dex_dump.txt"
   val la = new LightAndroid(classes_dex_file, dex_dump_file)
-  var bd = la.method.body("Lcom/app/demo/MainActivity;", "gcd", "(II)V")
-  bd.foreach(x => println(x.toString))
-  
-/*
+  val bd = la.method.body("Lcom/app/demo/MainActivity;", "gcd", "(II)V")
+  val x = new Lambda()
+ 
+
+  /*
+
+
   println(la.static_field.get("Ljava/lang/Object;"))
   println(la.static_field.get("Lcom/app/demo/MainActivity;"))
   println(la.interface.get("Lcom/app/demo/MainActivity;"))
