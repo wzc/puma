@@ -61,17 +61,21 @@ package lang
   // Takes Ins as a parameter, which consists of an operator (String), targets (List[String]) and sources (List[String])
   def f(op: String, tar: List[String], src: List[String]) : Exp = op match{
 
-    case "jmp"=> Abs(src.map(x=>Var(x)), Cond( src.map(x=>Var(x)), List( App(tar.map(x=>Lab(x.toInt+1)), src.map(x=>Var(x))), App(Lab(l.toInt+1), src.map(x=>Var(x))) )))
+    val xs = src.map(x=>Var(x))
 
-    case "mov"=> Abs(src.map(x=>Var(x)), Let(Var(tar.head), Var(src.head), App(List(Lab(l.toInt+1)), src.map(x=>Var(x))) ))
+    case "jmp"=> Abs(xs, Cond( src.map(x=>Var(x)), List( App(tar.map(x=>Lab(x.toInt+1)), src.map(x=>Var(x))), App(Lab(l.toInt+1), xs) ) ))
 
-    /*case "op"=> 
+    case "mov"=> Abs(xs, Let(Var(tar.head), Var(src.head), App(List(Lab(l.toInt+1)), xs) ))
 
-    case "ret"=> 
+    case "op"=> Abs(xs, Let(Var(tar.head), Op(List(src.map(x=>Var(x)), tar.head)), App(List(Lab(l.toInt+1)), xs) ))
 
-    case "inv"=> */
+    case "ret"=> {
+      if(src.isEmpty)
+          Abs(xs, Const("Unit"))
+      else Abs(xs, Var(src.head))
+    }
+
+    case "inv"=> Abs(xs, Let(Var(tar.head), App(src.map(x=>Var(x)), xs), App(Lab(l.toInt+1), xs) ))
 
   }
-
-  println(f("jmp", List("12","13"), List("12","54")))
 }
