@@ -74,6 +74,24 @@ import scala.sys.process._
  * @author Wei Chen @ University of Edinburgh, 25/06/2016 - 27/07/2016, 01/07/2017 
  * 
  */
+
+/**
+ * Instruction. Format: operator, a list of targets, and a list of sources.
+ */
+class Ins (var operator:String, var targets:List[String], var sources:List[String]) {
+  def op = operator
+  def ta: List[String] = targets
+  def src: List[String] = sources
+  /**
+   * @param sources varied length arguments.
+   */
+  def this(operator:String, targets:List[String], sources:String*) = {
+    this(operator, targets, sources.toList)
+  }
+  def this() = this("", List(), List())
+  override def toString = operator + " " + targets.toString + " " + sources.toString
+}
+
 class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
 
   /**
@@ -160,23 +178,6 @@ class LightAndroid (classes_dex_file:String, dex_dump_file:String) {
     def get(cls:Class): List[Field] = 
       if (tb contains cls) tb(cls)
       else List()
-  }
-
-  /**
-   * Instruction. Format: operator, a list of targets, and a list of sources.
-   */
-  class Ins (var operator:String, var targets:List[String], var sources:List[String]) {
-    def op = operator
-    def ta: List[String] = targets
-    def src: List[String] = sources
-    /**
-     * @param sources varied length arguments.
-     */
-    def this(operator:String, targets:List[String], sources:String*) = {
-      this(operator, targets, sources.toList)
-    }
-    def this() = this("", List(), List())
-    override def toString = operator + " " + targets.toString + " " + sources.toString
   }
 
   /**
