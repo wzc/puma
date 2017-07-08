@@ -45,6 +45,7 @@ class Lambda(_la:LightAndroid) {
   /** Expression. 
    * Exp ::= Const | Var | Fld | Fun [Exp] | Op [Exp] | Lab | Abs [Var] Exp | App Exp Exp | Let Exp Exp Exp | Cond [Exp] 
    */
+
   sealed abstract class Exp
     case class Const (s:String) extends Exp {override def toString = s} 
     case class Var (s:String) extends Exp {override def toString = s} 
@@ -61,31 +62,52 @@ class Lambda(_la:LightAndroid) {
 
   type Label = String
 
+  //Converts instructions to Lambda expressions, returns a tuple containing a label and an Exp
+
   def ins2exp(l:Label, ins:Ins, xs:List[Exp]) : (Label, Exp) = {
     ins.op match {
+
       case "jmp" => if (ins.src.length == 0) // unconditional jump 
                       (l, Abs(xs, Cond(Star(), ins.ta.map(x => App(Lab(x.toInt), xs)))))
                     else if (ins.ta.length == 1) // conditional jump 
                       (l, Abs(xs, Cond(Op(ins.src.map(x => Var(x))), 
-                                          App(Lab(l.toInt + 1), xs) :: ins.ta.map(x => App(Lab(x.toInt), xs)))))  
+                                          App(Lab(l.toInt + 1), xs) :: ins.ta.map(x => App(Lab(x.toInt), xs))) ))  
                     else // switches
                       (l, Abs(xs, Cond(Op(ins.src.map(x => Var(x))), 
                                           ins.ta.map(x => App(Lab(x.toInt), xs)))))  
-      case "mov" => Abs 
+
+      case "op" => if(ins.ta.isEmpty&&ins.src.isEmpty) // no operands
+                       (l, Abs(xs, App(Lab(l.toInt + 1), xs))) 
+
+                   else //more than one source operand, assuming target is only one variable
+                       (l, Abs(xs, Let(Var(ins.ta.head), Op(ins.src.map(x=>Var(x))), App(Lab(l.toInt + 1), xs))))
+
+      case "ret" => if(ins.src.isEmpty) //returns nothing
+                        (l, Abs(xs, Unit()))
+                    else //assuming source is only one variable
+                        (l, Abs(xs, Var(ins.src.head)))
+
+      //case "inv" => 
+
+      //case "mov" => 
       case _ => (l, Unit())
     }   
   }
     
-
   val bd = la.method.body("Lcom/app/demo/MainActivity;", "gcd", "(II)V")
+  
   val xs = 
-    la.method.args("Lcom/app/demo/MainActivity;", "gcd", "(II)V") match {
-      case Some(lst) => lst.map(x => Var(x))  
+    la.method.regs("Lcom/app/demo/MainActivity;", "gcd", "(II)V") match {
+      case Some(lst) => lst.map(x => Var(x)) //adding all registers to a list
       case None => List() 
     }
+  
+  //iterating over the body of the method
   bd match {
+    
+    //for each instruction, list of instructions 
     case Some(lst) => lst.foreach(x => println(x + "$$" + (ins2exp(x._1, x._2, xs))))
-    case None =>
+    case None => 
   }
  
   
