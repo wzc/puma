@@ -87,14 +87,21 @@ class Lambda(_la:LightAndroid) {
                     else //assuming source is only one variable
                         (l, Abs(xs, Var(ins.src.head)))
 
-      //case "inv" => 
+      //assuming r has one variable 
+      //case "inv" => (l, Abs(xs, Let(Var(ins.ta.head), App(,), App(Lab(l.toInt + 1), xs)) ))
 
       //case "mov" => 
+
       case _ => (l, Unit())
     }   
   }
     
   val bd = la.method.body("Lcom/app/demo/MainActivity;", "gcd", "(II)V")
+
+  val args = la.method.args("Lcom/app/demo/MainActivity;", "gcd", "(II)V") match {
+  	case Some(lst) => lst.map(x=> Var(x)) //adding all aruguments to a list
+  	case None => List()
+  }
   
   val xs = 
     la.method.regs("Lcom/app/demo/MainActivity;", "gcd", "(II)V") match {
