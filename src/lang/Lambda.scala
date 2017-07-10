@@ -69,8 +69,9 @@ class Lambda(_la:LightAndroid) {
 
   type Label = String
 
-  //Converts instructions to Lambda expressions, returns a tuple containing a label and an Exp
+  def elim(es:List[Exp]) : Exp = Unit()  // add code here to substituting labels
 
+  //Converts instructions to Lambda expressions, returns a tuple containing a label and an Exp
   def ins2exp(l:Label, ins:Ins, xs:List[Exp]) : (Label, Exp) = {
     ins.op match {
       case "jmp" => if (ins.src.length == 0) // unconditional jump 
