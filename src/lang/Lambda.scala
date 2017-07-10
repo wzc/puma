@@ -66,7 +66,6 @@ class Lambda(_la:LightAndroid) {
 
   def ins2exp(l:Label, ins:Ins, xs:List[Exp]) : (Label, Exp) = {
     ins.op match {
-
       case "jmp" => if (ins.src.length == 0) // unconditional jump 
                       (l, Abs(xs, Cond(Star(), ins.ta.map(x => App(Lab(x.toInt), xs)))))
                     else if (ins.ta.length == 1) // conditional jump 
@@ -76,16 +75,15 @@ class Lambda(_la:LightAndroid) {
                       (l, Abs(xs, Cond(Op(ins.src.map(x => Var(x))), 
                                           ins.ta.map(x => App(Lab(x.toInt), xs)))))  
 
-      case "op" => if(ins.ta.isEmpty&&ins.src.isEmpty) // no operands
-                       (l, Abs(xs, App(Lab(l.toInt + 1), xs))) 
+      case "op" => if (ins.ta.isEmpty && ins.src.isEmpty) // no operands
+                     (l, Abs(xs, App(Lab(l.toInt + 1), xs))) 
+                   else // more than one operand, assuming the target list contains only one variable
+                     (l, Abs(xs, Let(Var(ins.ta.head), Op(ins.src.map(x => Var(x))), App(Lab(l.toInt + 1), xs))))
 
-                   else //more than one source operand, assuming target is only one variable
-                       (l, Abs(xs, Let(Var(ins.ta.head), Op(ins.src.map(x=>Var(x))), App(Lab(l.toInt + 1), xs))))
-
-      case "ret" => if(ins.src.isEmpty) //returns nothing
-                        (l, Abs(xs, Unit()))
-                    else //assuming source is only one variable
-                        (l, Abs(xs, Var(ins.src.head)))
+      case "ret" => if (ins.src.isEmpty) // returns nothing
+                      (l, Abs(xs, Unit()))
+                    else // assuming the source list contains only one variable
+                      (l, Abs(xs, Var(ins.src.head)))
 
       //assuming r has one variable 
       //case "inv" => (l, Abs(xs, Let(Var(ins.ta.head), App(,), App(Lab(l.toInt + 1), xs)) ))
