@@ -35,7 +35,7 @@ package lang
  * +---------------------------------------------------------------------+
  * }}}
  *
- * @author Wei Chen, Harmony Signh @ University of Edinburgh, 01/07/2017 - 07/07/2017 
+ * @author Wei Chen, Harmony Singh @ University of Edinburgh, 01/07/2017 - 31/07/2017 
  */
 
 class Lambda(_la:LightAndroid) {
@@ -49,8 +49,11 @@ class Lambda(_la:LightAndroid) {
   sealed abstract class Exp
     case class Const (s:String) extends Exp {override def toString = s} 
     case class Var (s:String) extends Exp {override def toString = s} 
-    case class Fld (s:String, f:String) extends Exp {override def toString = s + "." + f} 
-    case class Fun (cls:String, name:String, typ:String) extends Exp {override def toString = cls + "." + name + ":" + typ} 
+    case class Fld (s:String) extends Exp {override def toString = s} 
+    case class Cls (s:String) extends Exp {override def toString = s} 
+    case class Nam (s:String) extends Exp {override def toString = s} 
+    case class Typ (s:String) extends Exp {override def toString = s} 
+    case class Fun (cls:Cls, name:Nam, typ:Typ) extends Exp {override def toString = cls + "." + name + ":" + typ} 
     case class Op (xs:List[Exp]) extends Exp {override def toString = "op" + xs.map(x => x.toString).foldLeft("")(_+ " " +_)} 
     case class Lab (i:Int) extends Exp {override def toString = i.toString} 
     case class Abs (xs:List[Exp], e:Exp) extends Exp {override def toString = "\\" + xs.map(x => x.toString).foldLeft("")(_+ " " +_) + " . " + e} 
@@ -86,7 +89,9 @@ class Lambda(_la:LightAndroid) {
                       (l, Abs(xs, Var(ins.src.head)))
       case "inv" => val s = ins.src // tar = [def_reg = "v"], src = [cls, name, typ] ++ args
                     val t = s.tail.tail.tail
-                    (l, Abs(xs, Let(Var(ins.ta.head), App(Fun(s(0), s(1), s(2)), t.map(x => Var(x))), App(Lab(l.toInt + 1), xs))))
+                    (l, Abs(xs, Let(Var(ins.ta.head), 
+                                    App(Fun(Cls(s(0)), Nam(s(1)), Typ(s(2))), t.map(x => Var(x))), 
+                                    App(Lab(l.toInt + 1), xs))))
 
       //case "mov" => 
 
