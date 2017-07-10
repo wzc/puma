@@ -7,11 +7,11 @@ package lang
  * xs: all registers used in a method. 
  * +---------------------------------------------------------------------+
  * |  (l, mov t s)      -> (l, \xs.(let t = s in l+1 xs))                | 
- * |  (l, mov t a)      -> (l, \xs.(let t = a in l+1 xs))                | 
- * |  (l, mov t s.f)    -> (l, \xs.(let t = s.f in l+1 xs))              | 
- * |  (l, mov t.f s)    -> (l, \xs.(let t.f = s in l+1 xs))              | 
- * |  (l, mov t C.f)    -> (l, \xs.(let t = C.f in l+1 xs))              | 
- * |  (l, mov C.f s)    -> (l, \xs.(let C.f = s in l+1 xs))              | 
+ * |  (l, const t a)    -> (l, \xs.(let t = a in l+1 xs))                | 
+ * |  (l, iget t s.f)   -> (l, \xs.(let t = s.f in l+1 xs))              | 
+ * |  (l, iput t.f s)   -> (l, \xs.(let t.f = s in l+1 xs))              | 
+ * |  (l, sget t C.f)   -> (l, \xs.(let t = C.f in l+1 xs))              | 
+ * |  (l, sput C.f s)   -> (l, \xs.(let C.f = s in l+1 xs))              | 
  * +---------------------------------------------------------------------+
  * |  (l, op)           -> (l, \xs.(l+1 xs))                             | 
  * |  (l, op t s)       -> (l, \xs.(let t = 'op s in l+1 xs))            | 
@@ -29,9 +29,12 @@ package lang
  * |  (l, ret)          -> (l, \xs.())                                   | 
  * |  (l, ret s)        -> (l, \xs.s)                                    | 
  * +---------------------------------------------------------------------+
- * |  (l, new t C)      -> (l, \xs.(l+1 xs))                             | 
- * |  (l, new t n)      -> (l, \xs.(l+1 xs))                             | 
- * |  (l, new t #as as) -> (l, \xs.(let t = as in l+1 xs))               | 
+ * |  (l, new t C)      -> (l, \xs.(let t - unit in l+1 xs))             | 
+ * |  (l, new t n)      -> (l, \xs.(let t = unit in l+1 xs))             | 
+ * |  (l, new t #as as) -> (l, \xs.(let t.0 = as[0] in                   |
+ * |                                let t.1 = as[1] in                   |
+ * |                                ...                                  |
+ * |                                let t.n = as[n] in l+1 xs))          | 
  * +---------------------------------------------------------------------+
  * }}}
  *
@@ -49,7 +52,8 @@ class Lambda(_la:LightAndroid) {
   sealed abstract class Exp
     case class Const (s:String) extends Exp {override def toString = s} 
     case class Var (s:String) extends Exp {override def toString = s} 
-    case class Fld (s:String) extends Exp {override def toString = s} 
+    case class SFld (cls:Cls, f:Nam) extends Exp {override def toString = cls + "." + f} 
+    case class IFld (v:Var, f:Nam) extends Exp {override def toString = v + "." + f} 
     case class Cls (s:String) extends Exp {override def toString = s} 
     case class Nam (s:String) extends Exp {override def toString = s} 
     case class Typ (s:String) extends Exp {override def toString = s} 
@@ -92,16 +96,50 @@ class Lambda(_la:LightAndroid) {
                     (l, Abs(xs, Let(Var(ins.ta.head), 
                                     App(Fun(Cls(s(0)), Nam(s(1)), Typ(s(2))), t.map(x => Var(x))), 
                                     App(Lab(l.toInt + 1), xs))))
-
-      //case "mov" => 
-
+      case "mov" => (l, Abs(xs, Let(Var(ins.ta.head), 
+                                    Var(ins.src.head),
+                                    App(Lab(l.toInt + 1), xs))))
+      case "const" => (l, Abs(xs, Let(Var(ins.ta.head), 
+                                      Const(ins.src.head),
+                                      App(Lab(l.toInt + 1), xs))))
+      case "iget" => (l, Abs(xs, Let(Var(ins.ta.head), 
+                                     IFld(Var(ins.src(0)), Nam(ins.src(1))),
+                                     App(Lab(l.toInt + 1), xs))))
+      case "iput" => (l, Abs(xs, Let(IFld(Var(ins.ta(0)), Nam(ins.ta(1))),
+                                     Var(ins.src.head), 
+                                     App(Lab(l.toInt + 1), xs))))
+      case "aget" => (l, Abs(xs, Let(Var(ins.ta.head), 
+                                     IFld(Var(ins.src(0)), Nam(ins.src(1))),
+                                     App(Lab(l.toInt + 1), xs))))
+      case "aput" => (l, Abs(xs, Let(IFld(Var(ins.ta(0)), Nam(ins.ta(1))),
+                                     Var(ins.src.head), 
+                                     App(Lab(l.toInt + 1), xs))))
+      case "sget" => (l, Abs(xs, Let(Var(ins.ta.head), 
+                                     SFld(Cls(ins.src(0)), Nam(ins.src(1))),
+                                     App(Lab(l.toInt + 1), xs))))
+      case "sput" => (l, Abs(xs, Let(SFld(Cls(ins.ta(0)), Nam(ins.ta(1))),
+                                     Var(ins.src.head), 
+                                     App(Lab(l.toInt + 1), xs))))
+      case "new" => if (ins.src.length == 1) // new t C or new t n 
+                      (l, Abs(xs, Let(Var(ins.ta.head),
+                                      Unit(), 
+                                      App(Lab(l.toInt + 1), xs))))
+                    else (l, Unit())
+//                    else{ // new t #ns ns
+//                      val t = ins.ta.head
+//                      val ns = ins.src.tail
+//                      ns.foldRight(App(Lab(l.toInt + 1), xs):Exp)((y, x) => Let(IFld(Var(t), Nam(ns.indexOf(x).toString)), Var(x), y) } 
       case _ => (l, Unit())
-    }   
+    }
   }
     
-  val bd = la.method.body("Landroid/support/graphics/drawable/AnimatedVectorDrawableCompat$AnimatedVectorDrawableDelegateState;", 
-                          "newDrawable",
-                          "(Landroid/content/res/Resources;)Landroid/graphics/drawable/Drawable;")
+  //val bd = la.method.body("Landroid/support/graphics/drawable/AnimatedVectorDrawableCompat$AnimatedVectorDrawableDelegateState;", 
+  //                        "newDrawable",
+  //                        "(Landroid/content/res/Resources;)Landroid/graphics/drawable/Drawable;")
+
+  val bd = la.method.body("Lcom/app/demo/R$styleable;",
+                          "<clinit>",
+                          "()V")
   //val bd = la.method.body("Lcom/app/demo/MainActivity;", "gcd", "(II)V")
 
   val args = la.method.args("Lcom/app/demo/MainActivity;", "gcd", "(II)V") match {
