@@ -50,7 +50,7 @@ class Lambda(_la:LightAndroid) {
     case class Const (s:String) extends Exp {override def toString = s} 
     case class Var (s:String) extends Exp {override def toString = s} 
     case class Fld (s:String, f:String) extends Exp {override def toString = s + "." + f} 
-    case class Fun (s:String, xs:List[Exp]) extends Exp {override def toString = s + " " + xs.map(x => x.toString).foldLeft("")(_+ " " +_)} 
+    case class Fun (cls:String, name:String, typ:String) extends Exp {override def toString = cls + "." + name + ":" + typ} 
     case class Op (xs:List[Exp]) extends Exp {override def toString = "op" + xs.map(x => x.toString).foldLeft("")(_+ " " +_)} 
     case class Lab (i:Int) extends Exp {override def toString = i.toString} 
     case class Abs (xs:List[Exp], e:Exp) extends Exp {override def toString = "\\" + xs.map(x => x.toString).foldLeft("")(_+ " " +_) + " . " + e} 
@@ -84,9 +84,9 @@ class Lambda(_la:LightAndroid) {
                       (l, Abs(xs, Unit()))
                     else // assuming the source list contains only one variable
                       (l, Abs(xs, Var(ins.src.head)))
-
-      //assuming r has one variable 
-      //case "inv" => (l, Abs(xs, Let(Var(ins.ta.head), App(,), App(Lab(l.toInt + 1), xs)) ))
+      case "inv" => val s = ins.src // tar = [def_reg = "v"], src = [cls, name, typ] ++ args
+                    val t = s.tail.tail.tail
+                    (l, Abs(xs, Let(Var(ins.ta.head), App(Fun(s(0), s(1), s(2)), t.map(x => Var(x))), App(Lab(l.toInt + 1), xs))))
 
       //case "mov" => 
 
@@ -94,7 +94,10 @@ class Lambda(_la:LightAndroid) {
     }   
   }
     
-  val bd = la.method.body("Lcom/app/demo/MainActivity;", "gcd", "(II)V")
+  val bd = la.method.body("Landroid/support/graphics/drawable/AnimatedVectorDrawableCompat$AnimatedVectorDrawableDelegateState;", 
+                          "newDrawable",
+                          "(Landroid/content/res/Resources;)Landroid/graphics/drawable/Drawable;")
+  //val bd = la.method.body("Lcom/app/demo/MainActivity;", "gcd", "(II)V")
 
   val args = la.method.args("Lcom/app/demo/MainActivity;", "gcd", "(II)V") match {
   	case Some(lst) => lst.map(x=> Var(x)) //adding all aruguments to a list
