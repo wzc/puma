@@ -70,6 +70,8 @@ class Lambda(_la:LightAndroid) {
   type Label = String
 
   def elim(es:List[Exp]) : Exp = Unit()  // add code here to substituting labels
+  
+  def ref(e:Exp) : List[Lab] = List()
 
   //Converts instructions to Lambda expressions, returns a tuple containing a label and an Exp
   def ins2exp(l:Label, ins:Ins, xs:List[Exp]) : (Label, Exp) = {
