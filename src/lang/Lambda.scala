@@ -70,13 +70,6 @@ class Lambda(_la:LightAndroid) {
   type Label = String
 
   def elim(es:List[Exp]) : Exp = Unit()  // add code here to substituting labels
-  
-  var labels:List[Lab] = List[Lab]()
-  
-  def ref(e: (Label, Exp)) : List[Lab] = {
-    labels = Lab(e._1.toInt)::labels
-    labels
-  }
 
   //Converts instructions to Lambda expressions, returns a tuple containing a label and an Exp
   def ins2exp(l:Label, ins:Ins, xs:List[Exp]) : (Label, Exp) = {
@@ -165,7 +158,21 @@ class Lambda(_la:LightAndroid) {
       case None => List() 
     }
 
-  val exps: List[(Lab, Exp)] = List[(Lab, Exp)]()
+  //list of instructions
+  var inst: List[(Label, Exp)] = List[(Label, Exp)]()
+  
+  //list of labels
+  var labels:List[Lab] = List[Lab]()
+  
+  //list of expressions
+  //var exps: List[Exp] = List[Exp]()
+  
+  def ref(es: List[(Label, Exp)]) : List[Lab] = {
+    for(e<-es){
+      labels = Lab(e._1.toInt)::labels
+    }
+    labels
+  }
   
   //iterating over the body of the method
   bd match {
@@ -174,13 +181,14 @@ class Lambda(_la:LightAndroid) {
     case Some(lst) => {
       lst.foreach{
         x => println(x + "$$" + (ins2exp(x._1, x._2, xs)))
-        ref(ins2exp(x._1, x._2, xs))
+        inst = (ins2exp(x._1, x._2, xs))::inst //store all the instructions
       }
     }
     case None => 
   }
-  println(labels)
-  //println(ref(exps))
+  
+  println(ref(inst))
+  //println(labels)
   
 /*
   // Takes Ins as a parameter, which consists of an operator (String), targets (List[String]) and sources (List[String])
