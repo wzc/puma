@@ -71,7 +71,12 @@ class Lambda(_la:LightAndroid) {
 
   def elim(es:List[Exp]) : Exp = Unit()  // add code here to substituting labels
   
-  def ref(e:Exp) : List[Lab] = List()
+  var labels:List[Lab] = List[Lab]()
+  
+  def ref(e: (Label, Exp)) : List[Lab] = {
+    labels = Lab(e._1.toInt)::labels
+    labels
+  }
 
   //Converts instructions to Lambda expressions, returns a tuple containing a label and an Exp
   def ins2exp(l:Label, ins:Ins, xs:List[Exp]) : (Label, Exp) = {
@@ -94,11 +99,13 @@ class Lambda(_la:LightAndroid) {
                       (l, Abs(xs, Unit()))
                     else // assuming the source list contains only one variable
                       (l, Abs(xs, Var(ins.src.head)))
+                      
       case "inv" => val s = ins.src // tar = [def_reg = "v"], src = [cls, name, typ] ++ args
                     val t = s.tail.tail.tail
                     (l, Abs(xs, Let(Var(ins.ta.head), 
                                     App(Fun(Cls(s(0)), Nam(s(1)), Typ(s(2))), t.map(x => Var(x))), 
                                     App(Lab(l.toInt + 1), xs))))
+
       case "mov" => (l, Abs(xs, Let(Var(ins.ta.head), 
                                     Var(ins.src.head),
                                     App(Lab(l.toInt + 1), xs))))
@@ -132,6 +139,7 @@ class Lambda(_la:LightAndroid) {
 //                      val t = ins.ta.head
 //                      val ns = ins.src.tail
 //                      ns.foldRight(App(Lab(l.toInt + 1), xs):Exp)((y, x) => Let(IFld(Var(t), Nam(ns.indexOf(x).toString)), Var(x), y) } 
+      
       case _ => (l, Unit())
     }
   }
@@ -143,6 +151,7 @@ class Lambda(_la:LightAndroid) {
   val bd = la.method.body("Lcom/app/demo/R$styleable;",
                           "<clinit>",
                           "()V")
+  
   //val bd = la.method.body("Lcom/app/demo/MainActivity;", "gcd", "(II)V")
 
   val args = la.method.args("Lcom/app/demo/MainActivity;", "gcd", "(II)V") match {
@@ -155,15 +164,23 @@ class Lambda(_la:LightAndroid) {
       case Some(lst) => lst.map(x => Var(x)) //adding all registers to a list
       case None => List() 
     }
+
+  val exps: List[(Lab, Exp)] = List[(Lab, Exp)]()
   
   //iterating over the body of the method
   bd match {
-    
-    //for each instruction, list of instructions 
-    case Some(lst) => lst.foreach(x => println(x + "$$" + (ins2exp(x._1, x._2, xs))))
+
+    //for each instruction, store in a list of instructions 
+    case Some(lst) => {
+      lst.foreach{
+        x => println(x + "$$" + (ins2exp(x._1, x._2, xs)))
+        ref(ins2exp(x._1, x._2, xs))
+      }
+    }
     case None => 
   }
- 
+  println(labels)
+  //println(ref(exps))
   
 /*
   // Takes Ins as a parameter, which consists of an operator (String), targets (List[String]) and sources (List[String])
