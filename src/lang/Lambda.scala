@@ -69,7 +69,41 @@ class Lambda(_la:LightAndroid) {
 
   type Label = String
 
-  def elim(es:List[Exp]) : Exp = Unit()  // add code here to substituting labels
+  def elim(es:List[Exp]) : Exp = Unit()  // add code here for substituting labels
+
+  /** Adds all labels in the instructions to a list. 
+  * Takes a list of instructions as a parameter. 
+  */
+
+  //list of labels
+  var labels:List[Lab] = List[Lab]()
+
+  def ref(es: List[(Label, Exp)]) : List[Lab] = {
+    for(e<-es){
+      labels = Lab(e._1.toInt)::labels
+      f(e._2)
+    }
+    labels
+  }
+  
+  /** A recursive function to extract labels from an expression 
+  * Takes an expression as a parameter. 
+  */
+
+  def f(e: Exp): List[Lab] = {
+
+  	e match{
+  		case Lab(i) => {
+  		  labels = Lab(i)::labels
+  		}
+  		case Abs(xs, e) => f(e)
+  		case Let(ea, eb, ec) => f(ec)
+  		case App(ea, xs) => f(ea)
+  		case Cond(c, es) => es.foreach(x=>f(x))
+  		case _ =>
+  	}
+  	labels
+  }
 
   //Converts instructions to Lambda expressions, returns a tuple containing a label and an Exp
   def ins2exp(l:Label, ins:Ins, xs:List[Exp]) : (Label, Exp) = {
@@ -157,58 +191,22 @@ class Lambda(_la:LightAndroid) {
       case Some(lst) => lst.map(x => Var(x)) //adding all registers to a list
       case None => List() 
     }
-
+  
   //list of instructions
   var inst: List[(Label, Exp)] = List[(Label, Exp)]()
   
-  //list of labels
-  var labels:List[Lab] = List[Lab]()
-  
-  //list of expressions
-  //var exps: List[Exp] = List[Exp]()
-  
-  def ref(es: List[(Label, Exp)]) : List[Lab] = {
-    for(e<-es){
-      labels = Lab(e._1.toInt)::labels
-    }
-    labels
-  }
-  
   //iterating over the body of the method
   bd match {
-
     //for each instruction, store in a list of instructions 
     case Some(lst) => {
       lst.foreach{
         x => println(x + "$$" + (ins2exp(x._1, x._2, xs)))
-        inst = (ins2exp(x._1, x._2, xs))::inst //store all the instructions
+        inst = (ins2exp(x._1, x._2, xs))::inst //store all the instructions in a list
       }
     }
     case None => 
   }
   
   println(ref(inst))
-  //println(labels)
   
-/*
-  // Takes Ins as a parameter, which consists of an operator (String), targets (List[String]) and sources (List[String])
-  def f(op: String, tar: List[String], src: List[String]) : Exp = op match{
-
-    val xs = src.map(x=>Var(x))
-
-    case "jmp"=> Abs(xs, Cond( src.map(x=>Var(x)), List( App(tar.map(x=>Lab(x.toInt+1)), src.map(x=>Var(x))), App(Lab(l.toInt+1), xs) ) ))
-
-    case "mov"=> Abs(xs, Let(Var(tar.head), Var(src.head), App(List(Lab(l.toInt+1)), xs) ))
-
-    case "op"=> Abs(xs, Let(Var(tar.head), Op(List(src.map(x=>Var(x)), tar.head)), App(List(Lab(l.toInt+1)), xs) ))
-
-    case "ret"=> {
-      if(src.isEmpty)
-          Abs(xs, Const("Unit"))
-      else Abs(xs, Var(src.head))
-    }
-
-    case "inv"=> Abs(xs, Let(Var(tar.head), App(src.map(x=>Var(x)), xs), App(Lab(l.toInt+1), xs) ))
-  }
-   */
 }
