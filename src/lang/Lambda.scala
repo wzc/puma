@@ -77,6 +77,7 @@ class Lambda(_la:LightAndroid) {
            case Abs(xs,ea) => Abs(f(xs), subst(ea,t,s)) 
            case App(ea,xs) => App(subst(ea,t,s), f(xs))
            case Cond(ea,xs) => Cond(subst(ea,t,s), f(xs))
+           case Let(ea,eb,ec) => Let(subst(ea,t,s), subst(eb,t,s), subst(ec,t,s))
            case Fix(ea) => Fix(subst(ea,t,s))
            case _ => e
          } 
@@ -87,9 +88,9 @@ class Lambda(_la:LightAndroid) {
       case Nil => Abs(xs, Unit())
       case (l,t) :: ts => val ls = ref(t) 
                           if (ls == Nil && ts == Nil) t
-                          else if (ls.contains(l)) elim(xs, ts ++ List((l, Fix(subst(t, Star(), Lab(l.toInt)))))) 
-                               else if (l != "0") elim(xs, ts.map(lt => (lt._1, subst(lt._2, t, Lab(l.toInt)))))
-                                    else elim(xs, ts ++ List((l,t)))
+                          if (ls.contains(l)) elim(xs, ts ++ List((l, Fix(subst(t, Star(), Lab(l.toInt)))))) 
+                          if (l != "0") elim(xs, ts.map(lt => (lt._1, subst(lt._2, t, Lab(l.toInt)))))
+                          else  elim(xs, ts ++ List((l,t)))
     }
   }
 
@@ -199,7 +200,7 @@ class Lambda(_la:LightAndroid) {
     }
   
   bd match {
-    case Some(lst) => println(elim(xs, lst.map(x => ins2exp(x._1,x._2,xs))))
+    case Some(lst) => elim(xs, lst.map(x => ins2exp(x._1,x._2,xs)))
     case None => 
   }
 }
