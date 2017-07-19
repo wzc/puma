@@ -52,10 +52,10 @@ class Lambda(_la:LightAndroid) {
   sealed abstract class Exp
     case class Const (s:String) extends Exp {override def toString = s} 
     case class Var (s:String) extends Exp {override def toString = s} 
+    case class Nam (s:String) extends Exp {override def toString = s} 
+    case class Cls (s:String) extends Exp {override def toString = s} 
     case class SFld (cls:Cls, f:Nam) extends Exp {override def toString = cls + "." + f} 
     case class IFld (v:Var, f:Nam) extends Exp {override def toString = v + "." + f} 
-    case class Cls (s:String) extends Exp {override def toString = s} 
-    case class Nam (s:String) extends Exp {override def toString = s} 
     case class Typ (s:String) extends Exp {override def toString = s} 
     case class Fun (cls:Cls, name:Nam, typ:Typ) extends Exp {override def toString = cls + "." + name + ":" + typ} 
     case class Op (xs:List[Exp]) extends Exp {override def toString = "op" + xs.map(x => x.toString).foldLeft("")(_+ " " +_)} 
@@ -66,43 +66,48 @@ class Lambda(_la:LightAndroid) {
     case class Cond (c:Exp, es:List[Exp]) extends Exp {override def toString = "cond(" + c  + es.map(x => x.toString).foldLeft("")(_+ ", " +_) + ")"}
     case class Unit () extends Exp {override def toString = "unit"}
     case class Star () extends Exp {override def toString = "*"}
+    case class Fix (e:Exp) extends Exp {override def toString = "fix(\\ " + e + ")"} 
 
   type Label = String
+ 
+  def subst(e:Exp, t:Exp, s:Exp) : Exp = {
+    val f = (l:List[Exp]) => l.map(x => subst(x,t,s))
+    if (e == s) t 
+    else e match {
+           case Abs(xs,ea) => Abs(f(xs), subst(ea,t,s)) 
+           case App(ea,xs) => App(subst(ea,t,s), f(xs))
+           case Cond(ea,xs) => Cond(subst(ea,t,s), f(xs))
+           case Fix(ea) => Fix(subst(ea,t,s))
+           case _ => e
+         } 
+  } 
 
-  def elim(es:List[Exp]) : Exp = Unit()  // add code here for substituting labels
-
-  /** Adds all labels in the instructions to a list. 
-  * Takes a list of instructions as a parameter. 
-  */
-
-  //list of labels
-  var labels:List[Lab] = List[Lab]()
-
-  def ref(es: List[(Label, Exp)]) : List[Lab] = {
-    for(e<-es){
-      labels = Lab(e._1.toInt)::labels
-      f(e._2)
+  def elim(xs:List[Exp], es:List[(Label,Exp)]) : Exp = {
+    es match {
+      case Nil => Abs(xs, Unit())
+      case (l,t) :: ts => val ls = ref(t) 
+                          if (ls == Nil && ts == Nil) t
+                          else if (ls.contains(l)) elim(xs, ts ++ List((l, Fix(subst(t, Star(), Lab(l.toInt)))))) 
+                               else if (l != "0") elim(xs, ts.map(lt => (lt._1, subst(lt._2, t, Lab(l.toInt)))))
+                                    else elim(xs, ts ++ List((l,t)))
     }
-    labels
   }
-  
+
   /** A recursive function to extract labels from an expression 
   * Takes an expression as a parameter. 
   */
 
-  def f(e: Exp): List[Lab] = {
-
-  	e match{
-  		case Lab(i) => {
-  		  labels = Lab(i)::labels
-  		}
-  		case Abs(xs, e) => f(e)
-  		case Let(ea, eb, ec) => f(ec)
-  		case App(ea, xs) => f(ea)
-  		case Cond(c, es) => es.foreach(x=>f(x))
-  		case _ =>
-  	}
-  	labels
+  def ref(e:Exp) : List[Label] = {
+    val f = (l:List[Exp]) => l.foldRight(List[Label]())((x,y) => ref(x) ++ y)
+    e match {
+      case Lab(i) => List(i.toString)
+      case Abs(es, eb) => f(es ++ List(eb))
+      case App(ea, es) => f(List(ea) ++ es)
+      case Let(ea, eb, ec) => f(List(ea,eb,ec))
+      case Cond(ea, es) => f(ea :: es)
+      case Fix(e) => f(List(e))
+      case _ => Nil 
+    }
   }
 
   //Converts instructions to Lambda expressions, returns a tuple containing a label and an Exp
@@ -161,11 +166,12 @@ class Lambda(_la:LightAndroid) {
                       (l, Abs(xs, Let(Var(ins.ta.head),
                                       Unit(), 
                                       App(Lab(l.toInt + 1), xs))))
-                    else (l, Unit())
-//                    else{ // new t #ns ns
-//                      val t = ins.ta.head
-//                      val ns = ins.src.tail
-//                      ns.foldRight(App(Lab(l.toInt + 1), xs):Exp)((y, x) => Let(IFld(Var(t), Nam(ns.indexOf(x).toString)), Var(x), y) } 
+                    else{ // new t #ns ns
+                      val t = ins.ta.head
+                      val ns = ins.src.tail
+                      val fin:Exp = App(Lab(l.toInt + 1), xs)
+                      val f = (x:String, y:Exp) => Let(IFld(Var(t), Nam(ns.indexOf(x).toString)), Const(x), y)
+                      (l, ns.foldRight(fin)(f)) } 
       
       case _ => (l, Unit())
     }
@@ -192,21 +198,8 @@ class Lambda(_la:LightAndroid) {
       case None => List() 
     }
   
-  //list of instructions
-  var inst: List[(Label, Exp)] = List[(Label, Exp)]()
-  
-  //iterating over the body of the method
   bd match {
-    //for each instruction, store in a list of instructions 
-    case Some(lst) => {
-      lst.foreach{
-        x => println(x + "$$" + (ins2exp(x._1, x._2, xs)))
-        inst = (ins2exp(x._1, x._2, xs))::inst //store all the instructions in a list
-      }
-    }
+    case Some(lst) => println(elim(xs, lst.map(x => ins2exp(x._1,x._2,xs))))
     case None => 
   }
-  
-  println(ref(inst))
-  
 }
