@@ -66,7 +66,7 @@ class Lambda(_la:LightAndroid) {
     case class Cond (c:Exp, es:List[Exp]) extends Exp {override def toString = "cond(" + c  + es.map(x => x.toString).foldLeft("")(_+ ", " +_) + ")"}
     case class Unit () extends Exp {override def toString = "unit"}
     case class Star () extends Exp {override def toString = "*"}
-    case class Fix (e:Exp) extends Exp {override def toString = "fix(\\ " + e + ")"} 
+    case class Fix (e:Exp) extends Exp {override def toString = "fix(\\ *" + e + ")"} 
 
   type Label = String
  
@@ -87,10 +87,11 @@ class Lambda(_la:LightAndroid) {
     es match {
       case Nil => Abs(xs, Unit())
       case (l,t) :: ts => val ls = ref(t) 
+                          println(ls) ; println(ts)
                           if (ls == Nil && ts == Nil) t
-                          if (ls.contains(l)) elim(xs, ts ++ List((l, Fix(subst(t, Star(), Lab(l.toInt)))))) 
-                          if (l != "0") elim(xs, ts.map(lt => (lt._1, subst(lt._2, t, Lab(l.toInt)))))
-                          else  elim(xs, ts ++ List((l,t)))
+                          else if (ls.contains(l)) elim(xs, ts ++ List((l, Fix(subst(t, Star(), Lab(l.toInt)))))) 
+                          else if (l != "0") elim(xs, ts.map(lt => (lt._1, subst(lt._2, t, Lab(l.toInt)))))
+                          else elim(xs, ts.map(lt => (lt._1, subst(lt._2, t, Lab(l.toInt)))) ++ List((l,t)))
     }
   }
 
@@ -182,25 +183,33 @@ class Lambda(_la:LightAndroid) {
   //                        "newDrawable",
   //                        "(Landroid/content/res/Resources;)Landroid/graphics/drawable/Drawable;")
 
-  val bd = la.method.body("Lcom/app/demo/R$styleable;",
-                          "<clinit>",
-                          "()V")
+  //val bd = la.method.body("Lcom/app/demo/R$styleable;",
+  //                        "<clinit>",
+  //                        "()V")
   
   //val bd = la.method.body("Lcom/app/demo/MainActivity;", "gcd", "(II)V")
 
-  val args = la.method.args("Lcom/app/demo/MainActivity;", "gcd", "(II)V") match {
-  	case Some(lst) => lst.map(x=> Var(x)) //adding all aruguments to a list
-  	case None => List()
-  }
+  //val args = la.method.args("Lcom/app/demo/MainActivity;", "gcd", "(II)V") match {
+  // 	case Some(lst) => lst.map(x=> Var(x)) //adding all aruguments to a list
+  //  	case None => List()
+  //}
   
-  val xs = 
-    la.method.regs("Lcom/app/demo/MainActivity;", "gcd", "(II)V") match {
-      case Some(lst) => lst.map(x => Var(x)) //adding all registers to a list
-      case None => List() 
-    }
+  //val xs = 
+  //  la.method.regs("Lcom/app/demo/MainActivity;", "gcd", "(II)V") match {
+  //    case Some(lst) => lst.map(x => Var(x)) //adding all registers to a list
+  //    case None => List() 
+  //  }
   
-  bd match {
-    case Some(lst) => elim(xs, lst.map(x => ins2exp(x._1,x._2,xs)))
-    case None => 
-  }
+ 
+  // bd match {
+  //  case Some(lst) => elim(xs, lst.map(x => ins2exp(x._1,x._2,xs)))
+  //  case None => 
+  // }
+
+  val bd = List(("0", new Ins("mov", List("s"), List("'1"))),
+                ("1", new Ins("jmp", List("1"), List("s"))),
+                ("2", new Ins("ret", List(), List())))
+  val xs = List(Var("x"), Var("s"))
+
+  println(elim(xs, bd.map(x => ins2exp(x._1,x._2,xs))))
 }
