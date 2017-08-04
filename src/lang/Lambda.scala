@@ -61,12 +61,12 @@ class Lambda(_la:LightAndroid) {
     case class Op (xs:List[Exp]) extends Exp {override def toString = "op" + xs.map(x => x.toString).foldLeft("")(_+ " " +_)} 
     case class Lab (i:Int) extends Exp {override def toString = i.toString} 
     case class Abs (xs:List[Exp], e:Exp) extends Exp {override def toString = "\\" + xs.map(x => x.toString).foldLeft("")(_+ " " +_) + " . " + e} 
-    case class App (ea:Exp, xs:List[Exp]) extends Exp {override def toString = ea + xs.map(x => x.toString).foldLeft("")(_+ " " +_)} 
+    case class App (ea:Exp, xs:List[Exp]) extends Exp {override def toString = "(" + ea + ")" + xs.map(x => x.toString).foldLeft("")(_+ " " +_)} 
     case class Let (ea:Exp, eb:Exp, ec:Exp) extends Exp {override def toString = "let " + ea + " = " + eb + " in " + ec} 
     case class Cond (c:Exp, es:List[Exp]) extends Exp {override def toString = "cond(" + c  + es.map(x => x.toString).foldLeft("")(_+ ", " +_) + ")"}
     case class Unit () extends Exp {override def toString = "unit"}
     case class Star () extends Exp {override def toString = "*"}
-    case class Fix (e:Exp) extends Exp {override def toString = "fix(\\ *" + e + ")"} 
+    case class Fix (v:Var, e:Exp) extends Exp {override def toString = "fix(" + v + ", " + e + ")"} 
 
   type Label = String
  
@@ -78,7 +78,7 @@ class Lambda(_la:LightAndroid) {
            case App(ea,xs) => App(subst(ea,t,s), f(xs))
            case Cond(ea,xs) => Cond(subst(ea,t,s), f(xs))
            case Let(ea,eb,ec) => Let(subst(ea,t,s), subst(eb,t,s), subst(ec,t,s))
-           case Fix(ea) => Fix(subst(ea,t,s))
+           case Fix(v, ea) => Fix(v, subst(ea,t,s))
            case _ => e
          } 
   } 
@@ -87,9 +87,8 @@ class Lambda(_la:LightAndroid) {
     es match {
       case Nil => Abs(xs, Unit())
       case (l,t) :: ts => val ls = ref(t) 
-                          println(ls) ; println(ts)
-                          if (ls == Nil && ts == Nil) t
-                          else if (ls.contains(l)) elim(xs, ts ++ List((l, Fix(subst(t, Star(), Lab(l.toInt)))))) 
+                          if (ts == Nil) ls.foldRight(t)((x,y) => subst(y, Abs(xs, Unit()), Lab(x.toInt)))
+                          else if (ls.contains(l)) elim(xs, ts ++ List((l, Fix(Var(l), subst(t, Star(), Lab(l.toInt)))))) 
                           else if (l != "0") elim(xs, ts.map(lt => (lt._1, subst(lt._2, t, Lab(l.toInt)))))
                           else elim(xs, ts.map(lt => (lt._1, subst(lt._2, t, Lab(l.toInt)))) ++ List((l,t)))
     }
@@ -107,7 +106,7 @@ class Lambda(_la:LightAndroid) {
       case App(ea, es) => f(List(ea) ++ es)
       case Let(ea, eb, ec) => f(List(ea,eb,ec))
       case Cond(ea, es) => f(ea :: es)
-      case Fix(e) => f(List(e))
+      case Fix(_, e) => f(List(e))
       case _ => Nil 
     }
   }
@@ -208,8 +207,11 @@ class Lambda(_la:LightAndroid) {
 
   val bd = List(("0", new Ins("mov", List("s"), List("'1"))),
                 ("1", new Ins("jmp", List("1"), List("s"))),
-                ("2", new Ins("ret", List(), List())))
-  val xs = List(Var("x"), Var("s"))
+                ("2", new Ins("inv", List("x"), List("GPS", "getLocation", ": unit -> loc"))),
+                ("3", new Ins("jmp", List("2"), List("x"))),
+                ("4", new Ins("op", List("s"), List("x"))),
+                ("5", new Ins("inv", List("v"), List("SMS", "sendTextMessage", ": a -> unit", "s"))))
+  val xs = List(Var("x"), Var("s"), Var("v"))
 
   println(elim(xs, bd.map(x => ins2exp(x._1,x._2,xs))))
 }
